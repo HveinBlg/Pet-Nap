@@ -24,22 +24,20 @@
   // 预设宠物库（视频/图片）
   // - type: 'video' → 用 <video> 播放
   // - type: 'image' → 用 <img> 显示
+  // - alpha: true → 视频有 alpha 通道（透明背景），显示时不加圆角/阴影
+  // - loopStartSec: 循环起点秒数，用来做"入场只播一次、之后从此处循环"
   const PRESET_PETS = Object.freeze([
     {
-      id: 'preset-a',
-      name: '橘猫 A',
+      id: 'orange-cat',
+      name: '大胖橘',
       species: 'cat',
       type: 'video',
-      mime: 'video/mp4',
-      asset: 'presets/19091266-hd_1920_1080_30fps.mp4',
-    },
-    {
-      id: 'preset-b',
-      name: '橘猫 B',
-      species: 'cat',
-      type: 'video',
-      mime: 'video/mp4',
-      asset: 'presets/19787248-uhd_3840_2160_25fps.mp4',
+      mime: 'video/webm',
+      asset: 'presets/orange-cat.webm',
+      alpha: true,
+      // 来自 Kitty Screen 的默认时间参数：入场约 8.5s，之后从此处循环
+      loopStartSec: 8.466,
+      loopEndPadSec: 0.18,
     },
   ]);
 
@@ -48,7 +46,7 @@
     usageLimit: 25,              // 累计多少分钟触发（默认 25 min = 一个番茄钟）
     breakTime: 3,                // 休息时长（分钟）
     customDomains: DEFAULT_DOMAINS,
-    activePetId: 'preset-a',     // 当前使用的宠物 ID（可以是预设 ID 或 'custom:xxx'）
+    activePetId: 'orange-cat',   // 当前使用的宠物 ID（可以是预设 ID 或 'custom:xxx'）
     idleRoaming: true,           // 是否开启平时的漫游小宠物
     hardBlock: true,             // 触发时是否禁止滚动 / 强制休息
     mode: 'domain',              // 'domain'=只在特定网站计时  'global'=在所有网站计时

@@ -57,9 +57,16 @@
   object-fit: contain;
   background: transparent;
 }
-/* 视频保持原始宽高比 */
+/* 有阴影 —— 普通的图片/视频（矩形）需要 */
 .pet-overlay-pet .pet-video.size-fullscreen {
   box-shadow: 0 25px 60px rgba(0,0,0,0.45);
+}
+/* Alpha 透明视频：去掉圆角、去掉阴影，让它像真的坐在屏幕上 */
+.pet-overlay-pet .pet-video[data-alpha="true"] {
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  filter: drop-shadow(0 20px 40px rgba(0,0,0,0.35));   /* drop-shadow 会跟着 alpha 走，不出矩形 */
 }
 
 /* ============ 上传照片的呼吸/漂浮动画 ============ */
@@ -157,6 +164,12 @@
   border-radius: 14px;
   object-fit: cover;
   display: block;
+}
+/* 角落漫游的 alpha 视频也去掉圆角背景 */
+.pet-idle .pet-video[data-alpha="true"].size-idle {
+  border-radius: 0;
+  background: transparent;
+  object-fit: contain;
 }
 .pet-idle.walking .pet-img.size-idle,
 .pet-idle.walking .pet-video.size-idle {

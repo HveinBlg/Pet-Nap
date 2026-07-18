@@ -234,15 +234,41 @@ function createPetElement(pet, sizeClass) {
     const v = document.createElement('video');
     v.className = `pet-video ${sizeClass}`;
     v.dataset.petKind = pet?.kind || 'preset';
+    if (pet?.alpha) v.dataset.alpha = 'true';   // → CSS 去掉圆角/阴影
     v.src = src;
     v.muted = true;
     v.autoplay = true;
-    v.loop = true;
     v.playsInline = true;
     v.preload = 'auto';
     v.setAttribute('playsinline', '');
     v.setAttribute('muted', '');
-    v.play?.().catch(() => { /* iOS/autoplay 政策 → 静默失败 */ });
+
+    // 有 loopStartSec 就做"入场只播一次、从 loopStartSec 循环"（借用自 Kitty Screen）
+    // 否则就用最傻的 loop 属性
+    if (pet && typeof pet.loopStartSec === 'number' && pet.loopStartSec > 0) {
+      const startAt = pet.loopStartSec;
+      const endPad  = typeof pet.loopEndPadSec === 'number' ? pet.loopEndPadSec : 0.18;
+      let replaying = false;
+      const replay = () => {
+        if (replaying) return;
+        replaying = true;
+        v.currentTime = startAt;
+        v.play?.().catch(() => {});
+      };
+      v.addEventListener('ended', replay);
+      v.addEventListener('seeked', () => { replaying = false; });
+      v.addEventListener('timeupdate', () => {
+        if (replaying || v.seeking || !Number.isFinite(v.duration)) return;
+        // 到快结束时提前跳回循环起点，避免"闪一下"的接缝
+        if (v.currentTime > startAt + 1 && v.duration - v.currentTime <= endPad) {
+          replay();
+        }
+      });
+    } else {
+      v.loop = true;
+    }
+
+    v.play?.().catch(() => { /* autoplay 政策 → 静默失败 */ });
     return v;
   }
 

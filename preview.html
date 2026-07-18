@@ -25,16 +25,32 @@
       border: none; border-radius: 22px;
       background: white; display: block;
     }
-    .video-frame {
-      width: 380px;
-      border-radius: 22px; overflow: hidden;
-      background: linear-gradient(135deg, #2d1b3d, #1a1625);
-      padding: 8px;
+    /* 预览背景故意画一个 "浏览器" 让你看到透明效果 */
+    .browser-frame {
+      width: 640px; height: 400px;
+      border-radius: 14px; overflow: hidden;
+      position: relative;
+      background: white;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
     }
-    .video-frame video {
-      width: 100%; display: block;
-      border-radius: 14px;
-      background: black;
+    .browser-frame .browser-mock {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(180deg, #f5f5f5 0 40px, transparent 40px),
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400"><rect fill="%23fff" width="640" height="400"/><g fill="%23e0e0e0"><rect x="30" y="80" width="200" height="14" rx="4"/><rect x="30" y="110" width="360" height="10" rx="3"/><rect x="30" y="130" width="300" height="10" rx="3"/><rect x="30" y="160" width="380" height="10" rx="3"/><rect x="30" y="180" width="220" height="10" rx="3"/><rect x="30" y="220" width="580" height="120" rx="6"/></g></svg>') no-repeat;
+    }
+    .browser-frame .browser-mock::before {
+      content: '● ● ●';
+      position: absolute; top: 12px; left: 14px;
+      color: #ff5f57;
+      font-size: 12px; letter-spacing: 6px;
+    }
+    .browser-frame video {
+      position: absolute; bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 400px; height: auto;
+      filter: drop-shadow(0 10px 30px rgba(0,0,0,0.5));
+      pointer-events: none;
     }
     .caption { font-size: 13px; color: #c0b8c8; text-align: center; }
     .caption b { color: #ffd167; }
@@ -44,7 +60,7 @@
       -webkit-background-clip: text; background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    .info { max-width: 340px; }
+    .info { max-width: 380px; }
     .info p { color: #c0b8c8; font-size: 14px; line-height: 1.7; margin: 0 0 8px; }
     .info small { color: #7f7590; font-size: 12px; }
     .note {
@@ -58,10 +74,10 @@
   <div class="col">
     <h1>🐾 Pet Nap 预览</h1>
     <div class="info">
-      <p>左边是设置面板（点击工具栏图标弹出）。右边两个是真实猫咪视频预设。</p>
-      <small>preview.html 里 popup 不会真的保存设置（因为没有 chrome.storage API），但界面会完整渲染，宠物库里的视频也会自动播放。</small>
+      <p>左边是设置面板，右边是<b>透明背景橘猫在假浏览器上的效果</b>。</p>
+      <small>大胖橘视频来自 Kitty Screen (MIT © elliothux)，VP9 alpha 通道透明背景。</small>
       <div class="note">
-        ⚠️ 真正的<b>全屏遮罩休息</b>和<b>闲时页面漫游</b>需要装到 Chrome 才能体验。
+        ⚠️ 真正的<b>全屏遮罩</b>和<b>闲时页面漫游</b>需要装到 Chrome 才能体验。
       </div>
     </div>
   </div>
@@ -74,15 +90,11 @@
   </div>
 
   <div class="col">
-    <div class="video-frame">
-      <video src="presets/19091266-hd_1920_1080_30fps.mp4" muted autoplay loop playsinline></video>
+    <div class="browser-frame">
+      <div class="browser-mock"></div>
+      <video src="presets/orange-cat.webm" muted autoplay loop playsinline></video>
     </div>
-    <div class="caption"><b>橘猫 A</b> · 1080p · 4MB</div>
-
-    <div class="video-frame">
-      <video src="presets/19787248-uhd_3840_2160_25fps.mp4" muted autoplay loop playsinline></video>
-    </div>
-    <div class="caption"><b>橘猫 B</b> · 4K · 25MB（建议压到 1080p）</div>
+    <div class="caption"><b>大胖橘 · 透明背景</b> 直接"坐"在浏览器内容之上</div>
   </div>
 </body>
 </html>

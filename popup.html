@@ -77,9 +77,16 @@
         <div class="modal-title">上传我家宠物</div>
         <div class="modal-body">
           <div class="upload-slot" id="upload-slot">
-            <input type="file" id="file-input" accept="image/*" hidden />
-            <div class="upload-hint" id="upload-hint">点击 / 拖入宠物照片<br><small>建议：宠物居中 · 背景简单</small></div>
+            <input type="file" id="file-input" accept="image/*,video/*" hidden />
+            <div class="upload-hint" id="upload-hint">
+              点击 / 拖入宠物<b>照片或视频</b><br>
+              <small>视频会自动截取中间一帧 · 建议宠物居中，背景干净</small>
+            </div>
             <img id="upload-preview" alt="" />
+            <div class="upload-progress" id="upload-progress" hidden>
+              <div class="upload-progress-spin"></div>
+              <div class="upload-progress-text" id="upload-progress-text">处理中...</div>
+            </div>
           </div>
           <label class="check-label" style="margin-top:12px">
             <input type="text" id="pet-name-input" placeholder="给它起个名字（可选）" maxlength="12" />

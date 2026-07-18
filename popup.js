@@ -380,33 +380,86 @@ function bindUpload() {
   });
 
   async function handleFile(file) {
-    if (!file.type.startsWith('image/')) return alert('请选择图片文件');
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    if (!isImage && !isVideo) return alert('请选择图片或视频文件');
+
+    showProgress(isVideo ? '正在从视频截取一帧...' : '正在处理照片...');
+    let success = false;
     try {
-      const dataUrl = await fileToResizedDataUrl(file, MAX_IMAGE_SIZE);
+      let dataUrl;
+      let bgRemovedFlag = false;
+
+      if (isVideo) {
+        dataUrl = await extractVideoFrameAsPng(file, MAX_IMAGE_SIZE);
+        // 视频通常是实拍复杂场景，上传就自动跑一遍抠图
+        showProgress('正在抠掉背景...');
+        try {
+          const cleaned = await simpleRemoveBg(dataUrl);
+          dataUrl = cleaned;
+          bgRemovedFlag = true;
+        } catch (bgErr) {
+          console.warn('auto bg removal failed:', bgErr);
+        }
+      } else {
+        dataUrl = await fileToResizedDataUrl(file, MAX_IMAGE_SIZE);
+      }
+
       uploadState.file = file;
       uploadState.dataUrl = dataUrl;
-      uploadState.bgRemoved = false;
+      uploadState.bgRemoved = bgRemovedFlag;
       preview.src = dataUrl;
       preview.classList.add('show');
       hint.style.display = 'none';
       tools.style.display = 'flex';
-      rmBgHint.textContent = '';
+      rmBgHint.textContent = bgRemovedFlag ? '已自动抠图 · 不满意可以点"恢复原图"' : '';
+      rmBgBtn.textContent = bgRemovedFlag ? '恢复原图' : '尝试抠掉背景';
       $('#upload-save').disabled = false;
+      success = true;
     } catch (err) {
-      alert('加载图片失败：' + err.message);
+      alert('处理失败：' + err.message);
+    } finally {
+      hideProgress();
+      if (!success) {
+        // 出错时把界面恢复到"等待上传"状态
+        preview.classList.remove('show');
+        tools.style.display = 'none';
+        hint.style.display = '';
+        $('#upload-save').disabled = true;
+      }
     }
   }
 
+  function showProgress(text) {
+    const p = $('#upload-progress');
+    if (!p) return;
+    p.hidden = false;
+    $('#upload-progress-text').textContent = text;
+    preview.classList.remove('show');
+    hint.style.display = 'none';
+  }
+  function hideProgress() {
+    const p = $('#upload-progress');
+    if (p) p.hidden = true;
+  }
+
   rmBgBtn.addEventListener('click', async () => {
-    if (!uploadState.dataUrl) return;
+    if (!uploadState.dataUrl || !uploadState.file) return;
     if (uploadState.bgRemoved) {
-      // 恢复原图
-      const original = await fileToResizedDataUrl(uploadState.file, MAX_IMAGE_SIZE);
-      uploadState.dataUrl = original;
-      uploadState.bgRemoved = false;
-      preview.src = original;
-      rmBgBtn.textContent = '尝试抠掉背景';
-      rmBgHint.textContent = '';
+      // 恢复原图 —— 图片走 fileToResizedDataUrl，视频重新截帧
+      rmBgHint.textContent = '恢复中...';
+      try {
+        const original = uploadState.file.type.startsWith('video/')
+          ? await extractVideoFrameAsPng(uploadState.file, MAX_IMAGE_SIZE)
+          : await fileToResizedDataUrl(uploadState.file, MAX_IMAGE_SIZE);
+        uploadState.dataUrl = original;
+        uploadState.bgRemoved = false;
+        preview.src = original;
+        rmBgBtn.textContent = '尝试抠掉背景';
+        rmBgHint.textContent = '';
+      } catch (err) {
+        rmBgHint.textContent = '恢复失败: ' + err.message;
+      }
       return;
     }
     rmBgHint.textContent = '处理中...';
@@ -416,7 +469,7 @@ function bindUpload() {
       uploadState.bgRemoved = true;
       preview.src = out;
       rmBgBtn.textContent = '恢复原图';
-      rmBgHint.textContent = '简易抠图 · 背景越简单效果越好';
+      rmBgHint.textContent = '简易抠图 · 背景越干净效果越好';
     } catch (err) {
       rmBgHint.textContent = '抠图失败: ' + err.message;
     }
@@ -456,6 +509,44 @@ function resetUploadState() {
   $('#upload-save').disabled = true;
   $('#rm-bg').textContent = '尝试抠掉背景';
   $('#rm-bg-hint').textContent = '';
+}
+
+// 从视频里截取"中间一帧"，压缩到 maxDim，返回 PNG data URL
+// —— 用来把用户上传的宠物视频转成一张能用的静态图片（chrome.storage 装不下大视频）
+function extractVideoFrameAsPng(file, maxDim) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const v = document.createElement('video');
+    v.src = url;
+    v.muted = true;
+    v.playsInline = true;
+    v.preload = 'auto';
+    v.setAttribute('playsinline', '');
+
+    const cleanup = () => URL.revokeObjectURL(url);
+    const onError = (e) => { cleanup(); reject(new Error('视频无法解码 · 换个格式试试')); };
+
+    v.addEventListener('loadedmetadata', () => {
+      // 跳到视频中段，通常猫已经进画面且姿态稳定
+      v.currentTime = Math.min(0.5, v.duration * 0.4);
+    });
+    v.addEventListener('seeked', () => {
+      try {
+        const nw = v.videoWidth, nh = v.videoHeight;
+        if (!nw || !nh) return onError();
+        const scale = Math.min(1, maxDim / Math.max(nw, nh));
+        const w = Math.round(nw * scale);
+        const h = Math.round(nh * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(v, 0, 0, w, h);
+        cleanup();
+        resolve(canvas.toDataURL('image/png'));
+      } catch (err) { cleanup(); reject(err); }
+    }, { once: true });
+    v.addEventListener('error', onError, { once: true });
+  });
 }
 
 // 读取文件 → 压缩到 maxDim → 返回 data URL

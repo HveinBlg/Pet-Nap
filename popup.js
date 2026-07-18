@@ -90,25 +90,55 @@ function syncChips(key, value) {
 
 function renderCurrentPet() {
   const pet = shared.getActivePet(currentSettings, currentCustom);
-  const preview = $('#pet-preview');
-  preview.innerHTML = '';
-  const src = pet.kind === 'custom' ? pet.dataUrl : chrome.runtime.getURL(pet.asset);
-  if (pet.type === 'video') {
-    const v = document.createElement('video');
-    v.src = src;
-    v.muted = true; v.autoplay = true; v.loop = true; v.playsInline = true;
-    v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
-    preview.appendChild(v);
-  } else {
-    const img = document.createElement('img');
-    img.src = src;
-    preview.appendChild(img);
-  }
   $('#pet-name').textContent = pet.name || '未命名';
   const label = pet.kind === 'custom'
     ? '自定义 · 我家的'
     : `预设 · ${pet.species === 'cat' ? '猫咪' : (pet.species === 'dog' ? '狗狗' : '宠物')}`;
   $('#pet-status').textContent = label;
+  // 预览卡已删除。宠物库瓦片里会显示视频，那里更合适（且能对比多只）
+}
+
+// 创建一个"跳过入场、只循环 loopStartSec 之后"的 video
+// 关键：初始时隐藏，seek 到猫出现的时间后再显示，避免看到"透明入场帧"
+function makeLoopVideo(src, loopStartSec) {
+  const v = document.createElement('video');
+  v.src = src;
+  v.muted = true;
+  v.autoplay = true;
+  v.playsInline = true;
+  v.setAttribute('playsinline', '');
+  v.setAttribute('muted', '');
+  v.preload = 'auto';
+
+  if (typeof loopStartSec === 'number' && loopStartSec > 0) {
+    const startAt = loopStartSec;
+    v.style.opacity = '0';
+    v.style.transition = 'opacity 0.25s ease';
+    let seekedOnce = false;
+
+    v.addEventListener('loadedmetadata', () => {
+      v.currentTime = startAt;
+    });
+    v.addEventListener('seeked', () => {
+      if (!seekedOnce) {
+        seekedOnce = true;
+        v.style.opacity = '1';
+        v.play?.().catch(() => {});
+      }
+    });
+    v.addEventListener('timeupdate', () => {
+      if (!seekedOnce || !Number.isFinite(v.duration)) return;
+      if (v.duration - v.currentTime < 0.2) v.currentTime = startAt;
+    });
+    v.addEventListener('ended', () => {
+      v.currentTime = startAt;
+      v.play?.().catch(() => {});
+    });
+  } else {
+    v.loop = true;
+  }
+  v.play?.().catch(() => {});
+  return v;
 }
 
 function renderPetGrid() {
@@ -124,6 +154,7 @@ function renderPetGrid() {
       name: p.name,
       thumbSrc: chrome.runtime.getURL(p.asset),
       isVideo: p.type === 'video',
+      loopStartSec: p.loopStartSec,
       active: activeId === p.id,
       isCustom: false,
     }));
@@ -144,18 +175,32 @@ function renderPetGrid() {
   });
 }
 
-function makeTile({ id, name, thumbSrc, isVideo, active, isCustom, customId }) {
+function makeTile({ id, name, thumbSrc, isVideo, loopStartSec, active, isCustom, customId }) {
   const el = document.createElement('div');
   el.className = 'pet-tile' + (active ? ' active' : '');
   el.dataset.petId = id;
-  const media = isVideo
-    ? `<video src="${thumbSrc}" muted playsinline loop autoplay preload="auto"></video>`
-    : `<img src="${thumbSrc}" alt="" />`;
-  el.innerHTML = `
-    ${media}
-    <div class="tile-name">${escapeHtml(name)}</div>
-    ${isCustom ? `<button class="tile-del custom" data-custom-id="${customId}" title="删除">✕</button>` : ''}
-  `;
+
+  // media（视频用 DOM API，方便挂 loopStart 逻辑）
+  const media = isVideo ? makeLoopVideo(thumbSrc, loopStartSec) : (() => {
+    const img = document.createElement('img');
+    img.src = thumbSrc; img.alt = '';
+    return img;
+  })();
+  el.appendChild(media);
+
+  const nameEl = document.createElement('div');
+  nameEl.className = 'tile-name';
+  nameEl.textContent = name;
+  el.appendChild(nameEl);
+
+  if (isCustom) {
+    const del = document.createElement('button');
+    del.className = 'tile-del custom';
+    del.dataset.customId = customId;
+    del.title = '删除';
+    del.textContent = '✕';
+    el.appendChild(del);
+  }
   el.addEventListener('click', async (e) => {
     if (e.target.matches('.tile-del')) return;
     currentSettings = { ...currentSettings, activePetId: id };

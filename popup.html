@@ -19,15 +19,10 @@
       </label>
     </header>
 
-    <!-- 当前宠物预览 -->
-    <section class="card pet-card">
-      <div class="pet-preview" id="pet-preview"></div>
-      <div class="pet-meta">
-        <div class="pet-name" id="pet-name">--</div>
-        <div class="pet-status" id="pet-status">--</div>
-      </div>
-      <button class="btn primary small" id="play-now">陪我一下</button>
-    </section>
+    <!-- 隐藏 · 只用来接 shared 名称/状态数据（不再显示预览） -->
+    <div id="pet-preview" hidden></div>
+    <span id="pet-name" hidden></span>
+    <span id="pet-status" hidden></span>
 
     <!-- 时长预设 -->
     <section class="card">
@@ -83,6 +78,9 @@
         <span>强制模式（休息时禁止滚动）</span>
       </label>
     </section>
+
+    <!-- 主操作 · 立刻叫猫出来 -->
+    <button class="btn primary big" id="play-now">🐾 陪我一下</button>
 
     <footer class="ftr">
       <span>v0.1.0</span>

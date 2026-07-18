@@ -1,5 +1,7 @@
-"""Generate a minimalist crescent-moon icon. Mature, non-cartoon, no anime.
-Deep charcoal square + soft cream crescent. Pure stdlib.
+"""Generate a minimalist cat-head silhouette icon.
+Warm peach rounded-square background + dark cat silhouette.
+No facial features — just the shape (head + 2 pointed ears).
+Pure Python stdlib.
 """
 import struct, zlib, math, os
 
@@ -20,28 +22,49 @@ def smooth_edge(d, thickness=1.0):
     return 0.5 - (d / thickness) * 0.5
 
 
+def in_triangle(px, py, p1, p2, p3):
+    def sign(a, b, c):
+        return (a[0]-c[0])*(b[1]-c[1]) - (b[0]-c[0])*(a[1]-c[1])
+    d1 = sign((px, py), p1, p2)
+    d2 = sign((px, py), p2, p3)
+    d3 = sign((px, py), p3, p1)
+    has_neg = (d1 < 0) or (d2 < 0) or (d3 < 0)
+    has_pos = (d1 > 0) or (d2 > 0) or (d3 > 0)
+    return not (has_neg and has_pos)
+
+
 def draw(size, path):
     pixels = bytearray()
     corner = size * 0.22
     thin = max(1.0, size / 64.0)
 
-    # 深炭底 · 奶油月牙
-    BG   = (26, 22, 32)         # deep warm charcoal
-    MOON = (240, 226, 199)      # cream / soft moon
+    # 暖桃色底 · 深棕猫头
+    BG  = (255, 214, 190)
+    CAT = (56, 40, 44)
 
-    # Crescent = 大圆 减去 偏右上的中等圆
-    moon_cx = size * 0.44
-    moon_cy = size * 0.50
-    moon_r  = size * 0.30
+    # 猫头（略微椭圆，避免完全圆脸看着像 emoji）
+    head_cx = size * 0.5
+    head_cy = size * 0.58
+    head_rx = size * 0.28
+    head_ry = size * 0.26
 
-    cut_cx  = size * 0.60
-    cut_cy  = size * 0.42
-    cut_r   = size * 0.28
+    # 左右耳（尖三角，微微向外倾）
+    # 每个耳朵是一个三角形，底部贴在头顶两侧
+    ear_L = [
+        (size * 0.29, size * 0.42),   # 内侧底
+        (size * 0.19, size * 0.15),   # 顶
+        (size * 0.42, size * 0.36),   # 外侧底
+    ]
+    ear_R = [
+        (size * 0.71, size * 0.42),
+        (size * 0.81, size * 0.15),
+        (size * 0.58, size * 0.36),
+    ]
 
     for y in range(size):
-        pixels.append(0)                                    # PNG filter byte
+        pixels.append(0)   # PNG filter byte
         for x in range(size):
-            # ---- Rounded square mask (背景圆角矩形) ----
+            # 圆角矩形背景遮罩
             dx = min(x - corner, size - 1 - x - corner)
             dy = min(y - corner, size - 1 - y - corner)
             if dx < 0 and dy < 0:
@@ -53,21 +76,23 @@ def draw(size, path):
                 pixels.extend([0, 0, 0, 0])
                 continue
 
-            # ---- Moon shape ----
-            in_big = math.hypot(x - moon_cx, y - moon_cy) < moon_r
-            in_cut = math.hypot(x - cut_cx, y - cut_cy) < cut_r
-            on_moon = in_big and not in_cut
+            # 猫头 · 椭圆
+            head_signed = (((x - head_cx) / head_rx) ** 2 +
+                           ((y - head_cy) / head_ry) ** 2) - 1
+            head_signed *= min(head_rx, head_ry)   # 近似有符号距离
+            head_a = smooth_edge(head_signed, thin)
 
-            # Small anti-alias by evaluating sub-pixel edge distance for the moon
-            d_big = math.hypot(x - moon_cx, y - moon_cy) - moon_r
-            d_cut = cut_r - math.hypot(x - cut_cx, y - cut_cy)
-            # Moon boundary distance: outer edge = -d_big (positive inside), inner cut edge = -d_cut (positive outside cut)
-            moon_signed = max(d_big, d_cut)                 # >0 = outside crescent, <0 = inside
-            moon_a = smooth_edge(moon_signed, thin)
+            # 两只耳朵
+            in_earL = in_triangle(x, y, *ear_L)
+            in_earR = in_triangle(x, y, *ear_R)
+            ear_a = 1.0 if (in_earL or in_earR) else 0.0
 
-            r = BG[0] * (1 - moon_a) + MOON[0] * moon_a
-            g = BG[1] * (1 - moon_a) + MOON[1] * moon_a
-            b = BG[2] * (1 - moon_a) + MOON[2] * moon_a
+            # 合并：猫的 alpha = max(head, ear)
+            cat_a = max(head_a, ear_a)
+
+            r = BG[0] * (1 - cat_a) + CAT[0] * cat_a
+            g = BG[1] * (1 - cat_a) + CAT[1] * cat_a
+            b = BG[2] * (1 - cat_a) + CAT[2] * cat_a
 
             pixels.extend([int(r), int(g), int(b), int(bg_a * 255)])
 

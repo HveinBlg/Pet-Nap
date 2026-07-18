@@ -1,0 +1,179 @@
+/* Pet Nap · Shadow DOM 样式（不会污染宿主页面） */
+
+:host, * { box-sizing: border-box; }
+
+/* ============ 全屏覆盖层 ============ */
+.pet-overlay {
+  position: fixed; inset: 0;
+  width: 100vw; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  animation: overlayFadeIn 0.5s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
+               "Microsoft YaHei", "Segoe UI", sans-serif;
+  color: #fff;
+  overflow: hidden;
+}
+.pet-overlay.leaving { animation: overlayFadeOut 0.6s ease forwards; }
+@keyframes overlayFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes overlayFadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+.pet-overlay-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255,200,180,0.35), transparent 50%),
+    radial-gradient(circle at 75% 80%, rgba(180,220,255,0.30), transparent 55%),
+    linear-gradient(160deg, rgba(30,20,40,0.92) 0%, rgba(60,35,60,0.94) 100%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* ============ 覆盖层里的宠物 ============ */
+.pet-overlay-pet {
+  position: relative; z-index: 2;
+  animation: petSlideIn 1.4s cubic-bezier(0.2, 0.9, 0.3, 1.05);
+  cursor: pointer;
+  user-select: none;
+  filter: drop-shadow(0 20px 40px rgba(0,0,0,0.35));
+}
+@keyframes petSlideIn {
+  0%   { transform: translateX(60vw) translateY(20vh) rotate(15deg) scale(0.6); opacity: 0; }
+  70%  { transform: translateX(0) translateY(0) rotate(-3deg) scale(1.08); opacity: 1; }
+  100% { transform: translateX(0) translateY(0) rotate(0) scale(1); }
+}
+.pet-overlay-pet.petting { animation: petPetting 0.5s ease; }
+@keyframes petPetting {
+  0%, 100% { transform: scale(1) rotate(0); }
+  25%      { transform: scale(1.05) rotate(-4deg); }
+  75%      { transform: scale(1.05) rotate(4deg); }
+}
+
+.pet-overlay-pet .pet-img.size-fullscreen {
+  width: min(60vw, 55vh);
+  height: auto;
+  display: block;
+}
+
+/* ============ 上传照片的呼吸/漂浮动画 ============ */
+.pet-img[data-pet-kind="custom"] {
+  border-radius: 24px;
+  animation: customPetFloat 3s ease-in-out infinite,
+             customPetBreathe 2.6s ease-in-out infinite;
+}
+@keyframes customPetFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+@keyframes customPetBreathe {
+  0%, 100% { filter: drop-shadow(0 10px 25px rgba(0,0,0,0.25)) brightness(1); }
+  50%      { filter: drop-shadow(0 15px 30px rgba(0,0,0,0.30)) brightness(1.03); }
+}
+
+/* ============ 顶部文字 + 倒计时 ============ */
+.pet-overlay-label {
+  position: absolute; top: 8vh; left: 50%;
+  transform: translateX(-50%);
+  text-align: center; z-index: 3;
+  pointer-events: none;
+}
+.pet-tag {
+  font-size: 20px; font-weight: 500;
+  letter-spacing: 6px;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 8px;
+}
+.pet-countdown {
+  font-size: clamp(80px, 15vw, 180px);
+  font-weight: 200; line-height: 1;
+  color: #fff;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 4px;
+}
+.pet-sub {
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+  margin-top: 12px;
+  letter-spacing: 2px;
+}
+
+/* ============ 关闭按钮（抚摸模式才有）============ */
+.pet-close {
+  position: absolute; top: 20px; right: 20px;
+  width: 40px; height: 40px;
+  border: none; border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  color: #fff; font-size: 18px;
+  cursor: pointer; z-index: 5;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, transform 0.15s;
+  font-family: inherit;
+}
+.pet-close:hover  { background: rgba(255,255,255,0.28); }
+.pet-close:active { transform: scale(0.9); }
+
+/* ============ 抚摸时冒出的爱心 ============ */
+.pet-heart {
+  position: absolute; top: 20%; left: 50%;
+  font-size: 32px; color: #ff4d6a;
+  pointer-events: none;
+  animation: heartFloat 1.2s ease-out forwards;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+  z-index: 10;
+}
+@keyframes heartFloat {
+  0%   { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+  20%  { opacity: 1; transform: translate(-50%, -20px) scale(1.3); }
+  100% { opacity: 0; transform: translate(-50%, -140px) scale(1); }
+}
+
+/* ============ 漫游小宠物 ============ */
+.pet-idle {
+  position: fixed;
+  left: 0; top: 0;
+  width: 90px; height: 108px;
+  transform: translate(var(--pet-x), var(--pet-y));
+  transition: transform var(--pet-walk-dur, 0ms) cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 2147483646;
+  --pet-facing: 1;
+}
+.pet-idle .pet-img.size-idle {
+  width: 90px; height: 108px;
+  transform: scaleX(var(--pet-facing));
+  transition: transform 0.3s;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
+  animation: idleBob 1.4s ease-in-out infinite;
+}
+.pet-idle.walking .pet-img.size-idle {
+  animation: idleWalk 0.45s linear infinite;
+}
+@keyframes idleBob {
+  0%, 100% { transform: scaleX(var(--pet-facing)) translateY(0); }
+  50%      { transform: scaleX(var(--pet-facing)) translateY(-3px); }
+}
+@keyframes idleWalk {
+  0%, 100% { transform: scaleX(var(--pet-facing)) translateY(0) rotate(0); }
+  25%      { transform: scaleX(var(--pet-facing)) translateY(-4px) rotate(-2deg); }
+  75%      { transform: scaleX(var(--pet-facing)) translateY(-4px) rotate(2deg); }
+}
+
+/* 悬停提示气泡 */
+.pet-idle::after {
+  content: '摸摸我 🐾';
+  position: absolute; bottom: -22px; left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: rgba(30,20,40,0.85); color: #fff;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 11px; white-space: nowrap;
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.pet-idle:hover::after {
+  opacity: 1; transform: translateX(-50%) translateY(0);
+}
+
+/* ============ Fallback：SVG 装载中的占位 ============ */
+.pet-img { display: block; }
+.pet-img[src=""] { visibility: hidden; }

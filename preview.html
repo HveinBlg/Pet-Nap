@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pet Nap · 预览</title>
+  <style>
+    body {
+      margin: 0; min-height: 100vh;
+      background: linear-gradient(135deg, #1a1625 0%, #2d1b3d 50%, #1a1625 100%);
+      display: flex; flex-wrap: wrap; align-items: flex-start;
+      gap: 40px; padding: 40px 30px;
+      justify-content: center;
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: white;
+    }
+    .col { display: flex; flex-direction: column; gap: 20px; align-items: center; }
+    .frame {
+      background: #111;
+      border-radius: 28px;
+      padding: 8px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+    }
+    .popup-frame iframe {
+      width: 380px; height: 720px;
+      border: none; border-radius: 22px;
+      background: white; display: block;
+    }
+    .pet-frame {
+      width: 240px; height: 300px;
+      border-radius: 22px; overflow: hidden;
+      background: linear-gradient(135deg, #ffe0e8, #e6efff);
+      display: flex; align-items: center; justify-content: center;
+      padding: 10px;
+    }
+    .pet-frame img { width: 100%; height: 100%; object-fit: contain; }
+    .caption { font-size: 13px; color: #c0b8c8; text-align: center; }
+    .caption b { color: #ffd167; }
+    h1 {
+      font-size: 30px; margin: 0 0 8px;
+      background: linear-gradient(135deg, #ff8fb1, #ffd167);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .info { max-width: 340px; }
+    .info p { color: #c0b8c8; font-size: 14px; line-height: 1.7; margin: 0 0 8px; }
+    .info small { color: #7f7590; font-size: 12px; }
+    .note {
+      background: rgba(255,143,177,0.1); border: 1px solid rgba(255,143,177,0.3);
+      color: #ff8fb1; font-size: 12px; padding: 10px 14px;
+      border-radius: 10px; margin-top: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="col">
+    <h1>🐾 Pet Nap 预览</h1>
+    <div class="info">
+      <p>左边是设置面板（点击工具栏图标弹出），右边是预设宠物 —— 会呼吸、眨眼、摇尾巴。</p>
+      <small>preview.html 只演示 popup 视觉，真正的<b>全屏遮罩</b>和<b>闲时漫游</b>需要安装到 Chrome 才能体验。</small>
+      <div class="note">
+        ⚠️ preview.html 里 popup 不会保存设置（因为没有 chrome.storage API），仅用于查看视觉。
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="frame popup-frame">
+      <iframe src="popup.html"></iframe>
+    </div>
+    <div class="caption">Popup 设置面板</div>
+  </div>
+
+  <div class="col">
+    <div class="frame pet-frame">
+      <img src="presets/orange.svg" alt="小橘" />
+    </div>
+    <div class="caption"><b>小橘</b> · 会呼吸、眨眼、摇尾巴、耳朵抖</div>
+
+    <div class="frame pet-frame">
+      <img src="presets/shiba.svg" alt="阿柴" />
+    </div>
+    <div class="caption"><b>阿柴</b> · 会呼吸、摇尾巴、伸舌头喘气</div>
+  </div>
+
+  <script>
+    // 给 popup.html 里的 chrome API 打个补丁，让它在 preview 时不报错
+    // 通过 postMessage 或 blob URL 稍嫌复杂，简单起见让 iframe 里的 chrome 变成假的
+    const frames = document.querySelectorAll('iframe');
+    frames.forEach((f) => {
+      f.addEventListener('load', () => {
+        try {
+          const win = f.contentWindow;
+          win.chrome = win.chrome || {};
+          win.chrome.storage = win.chrome.storage || {
+            local: {
+              get: (keys, cb) => cb({}),
+              set: (obj, cb) => cb && cb(),
+              onChanged: { addListener: () => {} },
+            },
+          };
+          win.chrome.tabs = win.chrome.tabs || {
+            query: (opts, cb) => cb([{ id: 1 }]),
+            sendMessage: (id, msg, cb) => cb && cb({ ok: true }),
+          };
+          win.chrome.runtime = win.chrome.runtime || {
+            getURL: (p) => p,
+            lastError: null,
+          };
+        } catch {}
+      });
+    });
+  </script>
+</body>
+</html>

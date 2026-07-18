@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pet Nap</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- 顶部 -->
+    <header class="hdr">
+      <div class="hdr-left">
+        <img src="assets/icon-48.png" alt="" class="hdr-icon" />
+        <div>
+          <div class="hdr-title">Pet Nap</div>
+          <div class="hdr-sub">宠物打盹 · 陪你休息</div>
+        </div>
+      </div>
+      <label class="toggle" title="总开关">
+        <input type="checkbox" id="enabled" checked />
+        <span class="toggle-slider"></span>
+      </label>
+    </header>
+
+    <!-- 当前宠物预览 -->
+    <section class="card pet-card">
+      <div class="pet-preview" id="pet-preview">
+        <img id="pet-preview-img" src="" alt="" />
+      </div>
+      <div class="pet-meta">
+        <div class="pet-name" id="pet-name">--</div>
+        <div class="pet-status" id="pet-status">--</div>
+      </div>
+      <button class="btn primary small" id="play-now">陪我一下</button>
+    </section>
+
+    <!-- 时间设置 -->
+    <section class="card">
+      <div class="row">
+        <label class="row-label">累计使用</label>
+        <div class="row-value">
+          <input type="range" id="usage-limit" min="1" max="120" value="25" />
+          <span class="row-num" id="usage-limit-val">25 分钟</span>
+        </div>
+      </div>
+      <div class="row">
+        <label class="row-label">强制休息</label>
+        <div class="row-value">
+          <input type="range" id="break-time" min="1" max="30" value="3" />
+          <span class="row-num" id="break-time-val">3 分钟</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 模式 + 域名 -->
+    <section class="card">
+      <div class="tab-row">
+        <label class="pill">
+          <input type="radio" name="mode" value="domain" checked />
+          <span>仅在特定网站</span>
+        </label>
+        <label class="pill">
+          <input type="radio" name="mode" value="global" />
+          <span>所有网站</span>
+        </label>
+      </div>
+      <div id="domains-wrap">
+        <textarea id="domains" placeholder="每行一个域名，如&#10;youtube.com&#10;bilibili.com"></textarea>
+        <div class="hint">每行一个域名，会匹配所有子域名</div>
+      </div>
+    </section>
+
+    <!-- 宠物库 -->
+    <section class="card">
+      <div class="section-title">
+        <span>选择你的萌宠</span>
+        <button class="btn small ghost" id="add-pet">+ 上传我家宠物</button>
+      </div>
+      <div class="pet-grid" id="pet-grid"></div>
+    </section>
+
+    <!-- 高级 -->
+    <section class="card">
+      <div class="row row-checkbox">
+        <label class="check-label">
+          <input type="checkbox" id="idleRoaming" checked />
+          <span>闲时宠物在页面角落漫游</span>
+        </label>
+      </div>
+      <div class="row row-checkbox">
+        <label class="check-label">
+          <input type="checkbox" id="hardBlock" checked />
+          <span>休息时禁止滚动（强制休息）</span>
+        </label>
+      </div>
+    </section>
+
+    <footer class="ftr">
+      <span>v0.1.0 · MIT</span>
+      <a href="#" id="attributions">致谢</a>
+    </footer>
+
+    <!-- 上传弹窗 -->
+    <div id="upload-modal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-title">上传我家宠物</div>
+        <div class="modal-body">
+          <div class="upload-slot" id="upload-slot">
+            <input type="file" id="file-input" accept="image/*" hidden />
+            <div class="upload-hint" id="upload-hint">点击 / 拖入宠物照片<br><small>建议：宠物居中 · 背景简单</small></div>
+            <img id="upload-preview" alt="" />
+          </div>
+          <label class="check-label" style="margin-top:12px">
+            <input type="text" id="pet-name-input" placeholder="给它起个名字（可选）" maxlength="12" />
+          </label>
+          <div class="upload-tools" id="upload-tools" style="display:none">
+            <button class="btn small ghost" id="rm-bg">尝试抠掉背景</button>
+            <span class="tool-hint" id="rm-bg-hint"></span>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" id="upload-cancel">取消</button>
+          <button class="btn primary" id="upload-save" disabled>保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 致谢弹窗 -->
+    <div id="attr-modal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-title">致谢 · Attributions</div>
+        <div class="modal-body attr-body">
+          <p><b>Pet Nap</b> 的时间跟踪 + Shadow DOM 覆盖层机制参考自 <a href="https://github.com/zokuzoku/cat-gatekeeper" target="_blank" rel="noopener">Cat Gatekeeper</a>（MIT © zokuzoku）。</p>
+          <p>本扩展的所有素材（图标、SVG 预设宠物）均为原创，与 Cat Gatekeeper 无关联。</p>
+          <p>MIT License · 欢迎 Fork 修改</p>
+        </div>
+        <div class="modal-actions">
+          <button class="btn primary" id="attr-close">好的</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="shared.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="200" height="240">
+  <defs>
+    <linearGradient id="shibaBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f2c791"/>
+      <stop offset="1" stop-color="#d99a5a"/>
+    </linearGradient>
+    <radialGradient id="shibaBelly" cx="0.5" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#fff8ea"/>
+      <stop offset="1" stop-color="#ffe6c2"/>
+    </radialGradient>
+    <radialGradient id="shibaCheek" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffb8a8" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#ffb8a8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <style>
+    @keyframes petBreathe { 0%,100%{transform:scale(1,1);} 50%{transform:scale(1.015,1.03);} }
+    @keyframes petTailWag { 0%,100%{transform:rotate(15deg);} 50%{transform:rotate(-15deg);} }
+    @keyframes petBlink   { 0%,90%,100%{transform:scaleY(1);} 93%,96%{transform:scaleY(0.08);} }
+    @keyframes petPant    { 0%,60%,100%{transform:scaleY(1) translateY(0);} 75%{transform:scaleY(1.4) translateY(2px);} }
+    @keyframes petEarL    { 0%,85%,100%{transform:rotate(0);} 89%,92%{transform:rotate(-10deg);} }
+    @keyframes petEarR    { 0%,80%,100%{transform:rotate(0);} 84%,87%{transform:rotate(8deg);} }
+    @keyframes petSway    { 0%,100%{transform:rotate(-1deg);} 50%{transform:rotate(1deg);} }
+
+    .body-grp  { transform-origin: 100px 200px; animation: petBreathe 2.4s ease-in-out infinite; }
+    .head-grp  { transform-origin: 100px 130px; animation: petSway 5s ease-in-out infinite; }
+    .tail-grp  { transform-origin: 155px 175px; animation: petTailWag 1.3s ease-in-out infinite; }
+    .eyes-grp  { transform-origin: 100px 92px;  animation: petBlink 5s ease-in-out infinite; }
+    .tongue    { transform-origin: 100px 118px; animation: petPant 2.6s ease-in-out infinite; }
+    .ear-left  { transform-origin: 68px 62px;   animation: petEarL 6.5s ease-in-out infinite; }
+    .ear-right { transform-origin: 132px 62px;  animation: petEarR 7.5s ease-in-out infinite; }
+  </style>
+
+  <!-- Curly tail (behind body, on the right) -->
+  <g class="tail-grp">
+    <path d="M 155 175 Q 190 145, 178 118 Q 168 100, 148 108 Q 158 128, 152 148 Q 148 162, 155 175 Z"
+          fill="url(#shibaBody)" stroke="#a56f38" stroke-width="1.5"/>
+    <path d="M 172 130 Q 178 122, 168 112" stroke="#fff8ea" stroke-width="4"
+          fill="none" stroke-linecap="round" opacity="0.7"/>
+  </g>
+
+  <!-- Body -->
+  <g class="body-grp">
+    <ellipse cx="100" cy="185" rx="60" ry="50" fill="url(#shibaBody)"
+             stroke="#a56f38" stroke-width="1.5"/>
+    <!-- Chest/belly -->
+    <ellipse cx="100" cy="195" rx="34" ry="34" fill="url(#shibaBelly)"/>
+    <!-- Front paws -->
+    <ellipse cx="76" cy="225" rx="15" ry="11" fill="url(#shibaBody)" stroke="#a56f38" stroke-width="1.5"/>
+    <ellipse cx="124" cy="225" rx="15" ry="11" fill="url(#shibaBody)" stroke="#a56f38" stroke-width="1.5"/>
+    <ellipse cx="76" cy="230" rx="5" ry="2.5" fill="#a56f38" opacity="0.5"/>
+    <ellipse cx="124" cy="230" rx="5" ry="2.5" fill="#a56f38" opacity="0.5"/>
+  </g>
+
+  <!-- Head -->
+  <g class="head-grp">
+    <!-- Ears (pointy triangle, characteristic of Shiba) -->
+    <g class="ear-left">
+      <path d="M 52 55 L 72 20 L 88 62 Z" fill="url(#shibaBody)" stroke="#a56f38" stroke-width="1.5"/>
+      <path d="M 62 52 L 72 32 L 82 58 Z" fill="#ffd4ba"/>
+    </g>
+    <g class="ear-right">
+      <path d="M 148 55 L 128 20 L 112 62 Z" fill="url(#shibaBody)" stroke="#a56f38" stroke-width="1.5"/>
+      <path d="M 138 52 L 128 32 L 118 58 Z" fill="#ffd4ba"/>
+    </g>
+
+    <!-- Face -->
+    <ellipse cx="100" cy="90" rx="55" ry="50" fill="url(#shibaBody)"
+             stroke="#a56f38" stroke-width="1.5"/>
+
+    <!-- Mask: cream fur around muzzle (shiba trademark) -->
+    <ellipse cx="100" cy="105" rx="38" ry="28" fill="url(#shibaBelly)"/>
+    <!-- Forehead cream V-mark -->
+    <path d="M 82 65 Q 100 78, 118 65 L 118 78 Q 100 90, 82 78 Z"
+          fill="url(#shibaBelly)" opacity="0.9"/>
+
+    <!-- Cheek blush -->
+    <ellipse cx="66" cy="110" rx="9" ry="6" fill="url(#shibaCheek)"/>
+    <ellipse cx="134" cy="110" rx="9" ry="6" fill="url(#shibaCheek)"/>
+
+    <!-- Eyes (small dot shiba eyes) -->
+    <g class="eyes-grp">
+      <ellipse cx="82" cy="92" rx="5" ry="7" fill="#1a1a1a"/>
+      <ellipse cx="118" cy="92" rx="5" ry="7" fill="#1a1a1a"/>
+      <circle cx="84" cy="89" r="1.5" fill="white"/>
+      <circle cx="120" cy="89" r="1.5" fill="white"/>
+    </g>
+
+    <!-- Nose (triangle black) -->
+    <path d="M 92 106 L 108 106 L 100 116 Z" fill="#1a1a1a"/>
+
+    <!-- Smiling mouth -->
+    <path d="M 100 116 Q 100 122, 88 122" stroke="#6b2b1c" stroke-width="1.5"
+          fill="none" stroke-linecap="round"/>
+    <path d="M 100 116 Q 100 122, 112 122" stroke="#6b2b1c" stroke-width="1.5"
+          fill="none" stroke-linecap="round"/>
+
+    <!-- Tongue (pants) -->
+    <ellipse class="tongue" cx="100" cy="122" rx="7" ry="5" fill="#ff6b8a"/>
+    <path d="M 100 120 L 100 126" stroke="#c93a5a" stroke-width="0.8" opacity="0.6"/>
+  </g>
+</svg>

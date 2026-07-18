@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Pet Nap · 宠物打盹",
+  "version": "0.1.0",
+  "description": "累了？让萌宠来叫你休息。可上传自家宠物照片，让它在屏幕上陪你。",
+  "permissions": ["storage"],
+  "icons": {
+    "16": "assets/icon-16.png",
+    "48": "assets/icon-48.png",
+    "128": "assets/icon-128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Pet Nap · 宠物打盹",
+    "default_icon": {
+      "16": "assets/icon-16.png",
+      "48": "assets/icon-48.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["shared.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/*",
+        "content.css",
+        "presets/*"
+      ],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ]
+}

@@ -61,8 +61,6 @@ function renderAll() {
   $('#domains').value          = s.customDomains.join('\n');
   $('#idleRoaming').checked    = s.idleRoaming;
   $('#hardBlock').checked      = s.hardBlock;
-  $(`input[name="mode"][value="${s.mode}"]`).checked = true;
-  $('#domains-wrap').style.display = s.mode === 'domain' ? '' : 'none';
 
   syncChips('usageLimit', s.usageLimit);
   syncChips('breakTime',  s.breakTime);
@@ -252,14 +250,12 @@ function bindEvents() {
     });
   });
 
-  $$('input[name="mode"]').forEach((r) => {
-    r.addEventListener('change', (e) => {
-      const mode = e.target.value;
-      currentSettings.mode = mode;
-      $('#domains-wrap').style.display = mode === 'domain' ? '' : 'none';
-      setStorage({ mode });
-    });
-  });
+  // 模式切换已从 UI 移除，永远走 'domain' 模式（用户填域名生效）
+  // 如果之前存过 'global'，纠正一次
+  if (currentSettings.mode !== 'domain') {
+    currentSettings.mode = 'domain';
+    setStorage({ mode: 'domain' });
+  }
 
   $('#domains').addEventListener('change', (e) => {
     const list = shared.normalizeDomainList(e.target.value);
@@ -358,7 +354,8 @@ function bindUpload() {
   const rmBgBtn = $('#rm-bg');
   const rmBgHint = $('#rm-bg-hint');
 
-  $('#add-pet').addEventListener('click', () => {
+  $('#add-pet').addEventListener('click', (e) => {
+    e.preventDefault();   // 现在是 <a> 链接
     if (currentCustom.length >= MAX_CUSTOM_PETS) {
       alert(`最多保存 ${MAX_CUSTOM_PETS} 只自定义宠物`);
       return;

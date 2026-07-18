@@ -81,21 +81,37 @@ function ensureFilters(shadow) {
   filter.setAttribute('x', '0'); filter.setAttribute('y', '0');
   filter.setAttribute('width', '100%'); filter.setAttribute('height', '100%');
 
-  // 1. 侵蚀 alpha 0.75 像素
+  // 1. 先高斯模糊 alpha 通道，把 halo 边界柔化
+  const blurA = document.createElementNS(NS, 'feGaussianBlur');
+  blurA.setAttribute('in', 'SourceAlpha');
+  blurA.setAttribute('stdDeviation', '0.6');
+  blurA.setAttribute('result', 'ba');
+
+  // 2. 阈值化：把半透明 halo 像素砍掉
+  const thr = document.createElementNS(NS, 'feComponentTransfer');
+  thr.setAttribute('in', 'ba');
+  thr.setAttribute('result', 'ta');
+  const funcA = document.createElementNS(NS, 'feFuncA');
+  funcA.setAttribute('type', 'linear');
+  funcA.setAttribute('slope', '4');
+  funcA.setAttribute('intercept', '-1.4');
+  thr.appendChild(funcA);
+
+  // 3. 侵蚀 1.0 像素，进一步咬掉边缘
   const erode = document.createElementNS(NS, 'feMorphology');
   erode.setAttribute('operator', 'erode');
-  erode.setAttribute('radius', '0.75');
-  erode.setAttribute('in', 'SourceAlpha');
+  erode.setAttribute('radius', '1.0');
+  erode.setAttribute('in', 'ta');
   erode.setAttribute('result', 'e');
 
-  // 2. 用侵蚀后的 alpha 遮罩 SourceGraphic
+  // 4. 用处理后的 alpha 遮罩 SourceGraphic（拿到干净轮廓的彩色）
   const compose = document.createElementNS(NS, 'feComposite');
   compose.setAttribute('in', 'SourceGraphic');
   compose.setAttribute('in2', 'e');
   compose.setAttribute('operator', 'in');
   compose.setAttribute('result', 'src');
 
-  // 3. 压制粉紫色像素 alpha
+  // 5. 强力压制粉紫色（R+B 高、G 低）的像素 alpha
   const matrix = document.createElementNS(NS, 'feColorMatrix');
   matrix.setAttribute('in', 'src');
   matrix.setAttribute('type', 'matrix');
@@ -103,12 +119,21 @@ function ensureFilters(shadow) {
     '1    0    0    0  0 ' +
     '0    1    0    0  0 ' +
     '0    0    1    0  0 ' +
-    '-0.3 0.6 -0.3  1  0'
+    '-0.7 1.4 -0.7  1  0'
   );
+  matrix.setAttribute('result', 'clean');
 
+  // 6. 轻微高斯模糊结果，让最终边缘看起来更自然
+  const softBlur = document.createElementNS(NS, 'feGaussianBlur');
+  softBlur.setAttribute('in', 'clean');
+  softBlur.setAttribute('stdDeviation', '0.4');
+
+  filter.appendChild(blurA);
+  filter.appendChild(thr);
   filter.appendChild(erode);
   filter.appendChild(compose);
   filter.appendChild(matrix);
+  filter.appendChild(softBlur);
   defs.appendChild(filter);
   svg.appendChild(defs);
   shadow.appendChild(svg);
@@ -432,7 +457,6 @@ function showOverlay(mode, breakMinutes, onEnd) {
 
     const overlay = document.createElement('div');
     overlay.id = OVERLAY_ID;
-    // hardBlock 决定是否强制遮盖 + 禁止滚动
     const blocking = mode === 'break' && state.settings.hardBlock;
     overlay.className = 'pet-overlay '
       + (mode === 'break' ? 'break-mode ' : 'play-mode ')
@@ -445,40 +469,45 @@ function showOverlay(mode, breakMinutes, onEnd) {
       overlay.appendChild(bg);
     }
 
+    // 中间那一行：时钟 + 宠物（时钟在左，宠物在右）
+    const row = document.createElement('div');
+    row.className = 'pet-row';
+
+    if (mode === 'break') {
+      const clock = document.createElement('div');
+      clock.className = 'flip-clock';
+      clock.id = 'pnc';
+      clock.setAttribute('role', 'timer');
+      clock.setAttribute('aria-live', 'polite');
+      clock.innerHTML = `
+        <span class="flip-digit" data-d="0">0</span>
+        <span class="flip-digit" data-d="1">0</span>
+        <span class="flip-sep">:</span>
+        <span class="flip-digit" data-d="2">0</span>
+        <span class="flip-digit" data-d="3">0</span>
+      `;
+      row.appendChild(clock);
+    }
+
     // 宠物
     const petBox = document.createElement('div');
     petBox.className = 'pet-overlay-pet';
     const petImg = createPetElement(state.activePet, 'size-fullscreen');
     petBox.appendChild(petImg);
-    overlay.appendChild(petBox);
+    row.appendChild(petBox);
 
-    // 角落浮标：小倒计时 / 关闭
-    const chip = document.createElement('div');
-    chip.className = 'pet-chip';
+    overlay.appendChild(row);
 
-    if (mode === 'break') {
-      chip.innerHTML = `
-        <div class="flip-clock" id="pnc" role="timer" aria-live="polite">
-          <span class="flip-digit" data-d="0">0</span>
-          <span class="flip-digit" data-d="1">0</span>
-          <span class="flip-sep">:</span>
-          <span class="flip-digit" data-d="2">0</span>
-          <span class="flip-digit" data-d="3">0</span>
-        </div>
-        <button class="chip-close" aria-label="提前结束">✕</button>
-      `;
-      chip.classList.add('with-clock');
-      chip.querySelector('.chip-close').addEventListener('click', () => dismissOverlay(overlay, onEnd));
-    } else {
-      // play 模式：抚摸 · 无倒计时
-      chip.innerHTML = `
-        <span class="chip-icon">🐾</span>
-        <span class="chip-text">陪陪你 · 点宠物摸一下</span>
-        <button class="chip-close" aria-label="关闭">✕</button>
-      `;
-      chip.querySelector('.chip-close').addEventListener('click', () => dismissOverlay(overlay, onEnd));
+    // 关闭按钮：右上角，两种模式都有；blocking 模式下隐藏
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'pet-close-corner';
+    closeBtn.setAttribute('aria-label', '关闭');
+    closeBtn.innerHTML = '✕';
+    closeBtn.addEventListener('click', () => dismissOverlay(overlay, onEnd));
+    overlay.appendChild(closeBtn);
 
-      // 点宠物 → 抚摸反馈
+    // Play 模式：点猫 → 抚摸反馈（保留互动，但不再显示"陪陪你 · 点宠物摸一下"文字）
+    if (mode === 'play') {
       petBox.addEventListener('click', (e) => {
         e.stopPropagation();
         petBox.classList.remove('petting');
@@ -492,7 +521,6 @@ function showOverlay(mode, breakMinutes, onEnd) {
         setTimeout(() => heart.remove(), 1200);
       });
     }
-    overlay.appendChild(chip);
 
     shadow.appendChild(overlay);
 

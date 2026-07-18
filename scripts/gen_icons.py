@@ -1,4 +1,6 @@
-"""Generate a minimalist curled sleeping cat silhouette icon. Pure stdlib."""
+"""Generate a minimalist crescent-moon icon. Mature, non-cartoon, no anime.
+Deep charcoal square + soft cream crescent. Pure stdlib.
+"""
 import struct, zlib, math, os
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "assets")
@@ -18,54 +20,28 @@ def smooth_edge(d, thickness=1.0):
     return 0.5 - (d / thickness) * 0.5
 
 
-def in_triangle(px, py, p1, p2, p3):
-    """Barycentric point-in-triangle test."""
-    def sign(a, b, c):
-        return (a[0]-c[0])*(b[1]-c[1]) - (b[0]-c[0])*(a[1]-c[1])
-    d1 = sign((px, py), p1, p2)
-    d2 = sign((px, py), p2, p3)
-    d3 = sign((px, py), p3, p1)
-    has_neg = (d1 < 0) or (d2 < 0) or (d3 < 0)
-    has_pos = (d1 > 0) or (d2 > 0) or (d3 > 0)
-    return not (has_neg and has_pos)
-
-
 def draw(size, path):
     pixels = bytearray()
     corner = size * 0.22
     thin = max(1.0, size / 64.0)
 
-    # 极简配色：奶油底 + 深咖色猫
-    BG   = (246, 236, 218)      # 奶油
-    CAT  = (58, 42, 45)         # 深咖啡
+    # 深炭底 · 奶油月牙
+    BG   = (26, 22, 32)         # deep warm charcoal
+    MOON = (240, 226, 199)      # cream / soft moon
 
-    # 猫的几何（相对尺寸）—— 侧躺睡姿：头在左，尾在右
-    body_cx  = size * 0.55
-    body_cy  = size * 0.68
-    body_rx  = size * 0.36
-    body_ry  = size * 0.16
+    # Crescent = 大圆 减去 偏右上的中等圆
+    moon_cx = size * 0.44
+    moon_cy = size * 0.50
+    moon_r  = size * 0.30
 
-    head_cx  = size * 0.26
-    head_cy  = size * 0.58
-    head_r   = size * 0.14
-
-    ear_L    = [(size*0.19, size*0.38),
-                (size*0.16, size*0.50),
-                (size*0.28, size*0.49)]
-    ear_R    = [(size*0.32, size*0.36),
-                (size*0.30, size*0.48),
-                (size*0.39, size*0.48)]
-
-    # 尾巴：从身体右端向上翘起再回卷，用两个椭圆+一个矩形近似
-    tail_cx  = size * 0.85
-    tail_cy  = size * 0.58
-    tail_rx  = size * 0.06
-    tail_ry  = size * 0.16
+    cut_cx  = size * 0.60
+    cut_cy  = size * 0.42
+    cut_r   = size * 0.28
 
     for y in range(size):
         pixels.append(0)                                    # PNG filter byte
         for x in range(size):
-            # ---- 圆角矩形背景遮罩 ----
+            # ---- Rounded square mask (背景圆角矩形) ----
             dx = min(x - corner, size - 1 - x - corner)
             dy = min(y - corner, size - 1 - y - corner)
             if dx < 0 and dy < 0:
@@ -77,19 +53,23 @@ def draw(size, path):
                 pixels.extend([0, 0, 0, 0])
                 continue
 
-            # ---- 判断像素是否属于猫 ----
-            in_body = ((x - body_cx) / body_rx) ** 2 + ((y - body_cy) / body_ry) ** 2 < 1
-            in_head = math.hypot(x - head_cx, y - head_cy) < head_r
-            in_earL = in_triangle(x, y, *ear_L)
-            in_earR = in_triangle(x, y, *ear_R)
-            # 尾巴（右侧一个竖椭圆 + 顶端一段小弧）
-            in_tail = (((x - tail_cx) / tail_rx) ** 2 + ((y - tail_cy) / tail_ry) ** 2 < 1
-                       and y < body_cy + body_ry * 0.3)
+            # ---- Moon shape ----
+            in_big = math.hypot(x - moon_cx, y - moon_cy) < moon_r
+            in_cut = math.hypot(x - cut_cx, y - cut_cy) < cut_r
+            on_moon = in_big and not in_cut
 
-            on_cat = in_body or in_head or in_earL or in_earR or in_tail
-            r, g, b = (CAT if on_cat else BG)
+            # Small anti-alias by evaluating sub-pixel edge distance for the moon
+            d_big = math.hypot(x - moon_cx, y - moon_cy) - moon_r
+            d_cut = cut_r - math.hypot(x - cut_cx, y - cut_cy)
+            # Moon boundary distance: outer edge = -d_big (positive inside), inner cut edge = -d_cut (positive outside cut)
+            moon_signed = max(d_big, d_cut)                 # >0 = outside crescent, <0 = inside
+            moon_a = smooth_edge(moon_signed, thin)
 
-            pixels.extend([r, g, b, int(bg_a * 255)])
+            r = BG[0] * (1 - moon_a) + MOON[0] * moon_a
+            g = BG[1] * (1 - moon_a) + MOON[1] * moon_a
+            b = BG[2] * (1 - moon_a) + MOON[2] * moon_a
+
+            pixels.extend([int(r), int(g), int(b), int(bg_a * 255)])
 
     sig  = b"\x89PNG\r\n\x1a\n"
     ihdr = struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0)

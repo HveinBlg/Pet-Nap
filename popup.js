@@ -243,12 +243,22 @@ function bindEvents() {
   // 上传流程
   bindUpload();
 
-  // Attributions
-  $('#attributions').addEventListener('click', (e) => {
+  // 打赏
+  $('#tip').addEventListener('click', (e) => {
     e.preventDefault();
+    $('#tip-modal').classList.remove('hidden');
+  });
+  $('#tip-close').addEventListener('click', () => $('#tip-modal').classList.add('hidden'));
+  $('#tip-attr').addEventListener('click', () => {
+    $('#tip-modal').classList.add('hidden');
     $('#attr-modal').classList.remove('hidden');
   });
   $('#attr-close').addEventListener('click', () => $('#attr-modal').classList.add('hidden'));
+
+  // 点击遮罩关闭 modal
+  document.querySelectorAll('.modal').forEach((m) => {
+    m.addEventListener('click', (e) => { if (e.target === m) m.classList.add('hidden'); });
+  });
 }
 
 function getActiveTab() {

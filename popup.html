@@ -11,10 +11,7 @@
     <header class="hdr">
       <div class="hdr-left">
         <img src="assets/icon-48.png" alt="" class="hdr-icon" />
-        <div>
-          <div class="hdr-title">Pet Nap</div>
-          <div class="hdr-sub">宠物打盹 · 陪你休息</div>
-        </div>
+        <div class="hdr-title">Pet Nap</div>
       </div>
       <label class="toggle" title="总开关">
         <input type="checkbox" id="enabled" checked />
@@ -62,40 +59,34 @@
       <div class="pet-grid" id="pet-grid"></div>
     </section>
 
-    <!-- 更多设置（折叠） -->
-    <details class="more-card">
-      <summary>
-        <span>更多设置</span>
-        <span class="chev">›</span>
-      </summary>
-      <div class="more-body">
-        <div class="tab-row">
-          <label class="pill">
-            <input type="radio" name="mode" value="domain" checked />
-            <span>只在特定网站</span>
-          </label>
-          <label class="pill">
-            <input type="radio" name="mode" value="global" />
-            <span>所有网站</span>
-          </label>
-        </div>
-        <div id="domains-wrap">
-          <textarea id="domains" placeholder="每行一个域名"></textarea>
-        </div>
-        <label class="check-label">
-          <input type="checkbox" id="idleRoaming" checked />
-          <span>闲时宠物在页面角落漫游</span>
+    <!-- 更多设置 · 直接展开 -->
+    <section class="card">
+      <div class="tab-row">
+        <label class="pill">
+          <input type="radio" name="mode" value="domain" checked />
+          <span>只在特定网站</span>
         </label>
-        <label class="check-label">
-          <input type="checkbox" id="hardBlock" />
-          <span>强制模式（休息时禁止滚动）</span>
+        <label class="pill">
+          <input type="radio" name="mode" value="global" />
+          <span>所有网站</span>
         </label>
       </div>
-    </details>
+      <div id="domains-wrap">
+        <textarea id="domains" placeholder="每行一个域名"></textarea>
+      </div>
+      <label class="check-label">
+        <input type="checkbox" id="idleRoaming" checked />
+        <span>闲时宠物在页面角落漫游</span>
+      </label>
+      <label class="check-label">
+        <input type="checkbox" id="hardBlock" />
+        <span>强制模式（休息时禁止滚动）</span>
+      </label>
+    </section>
 
     <footer class="ftr">
-      <span>v0.1.0 · MIT</span>
-      <a href="#" id="attributions">致谢</a>
+      <span>v0.1.0</span>
+      <a href="#" id="tip">☕ 打赏作者</a>
     </footer>
 
     <!-- 上传弹窗 -->
@@ -123,13 +114,42 @@
       </div>
     </div>
 
-    <!-- 致谢弹窗 -->
+    <!-- 打赏弹窗 -->
+    <div id="tip-modal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-title">☕ 请我喝杯咖啡</div>
+        <div class="modal-body tip-body">
+          <p class="tip-lead">Pet Nap 如果陪伴了你的午休 · 你的一点心意就是继续做下去的动力</p>
+          <div class="qr-grid">
+            <div class="qr-box">
+              <div class="qr-slot" data-qr="wechat">
+                <img src="assets/qr-wechat.png" alt="微信收款" onerror="this.classList.add('missing')" />
+              </div>
+              <div class="qr-label">微信</div>
+            </div>
+            <div class="qr-box">
+              <div class="qr-slot" data-qr="alipay">
+                <img src="assets/qr-alipay.png" alt="支付宝收款" onerror="this.classList.add('missing')" />
+              </div>
+              <div class="qr-label">支付宝</div>
+            </div>
+          </div>
+          <p class="tip-hint">把自己的收款二维码放到 <code>assets/qr-wechat.png</code> 和 <code>assets/qr-alipay.png</code> 就会自动显示</p>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" id="tip-attr">项目来源</button>
+          <button class="btn primary" id="tip-close">谢谢！</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 来源弹窗（原致谢） -->
     <div id="attr-modal" class="modal hidden">
       <div class="modal-card">
-        <div class="modal-title">致谢 · Attributions</div>
+        <div class="modal-title">项目来源</div>
         <div class="modal-body attr-body">
-          <p><b>Pet Nap</b> 的时间跟踪 + Shadow DOM 覆盖层机制参考自 <a href="https://github.com/zokuzoku/cat-gatekeeper" target="_blank" rel="noopener">Cat Gatekeeper</a>（MIT © zokuzoku）。</p>
-          <p>本扩展的所有素材（图标、SVG 预设宠物）均为原创，与 Cat Gatekeeper 无关联。</p>
+          <p><b>Pet Nap</b> 的时间跟踪 · Shadow DOM 覆盖层机制参考自 <a href="https://github.com/zokuzoku/cat-gatekeeper" target="_blank" rel="noopener">Cat Gatekeeper</a>（MIT © zokuzoku）。</p>
+          <p>透明背景橘猫视频与循环参数来自 <a href="https://github.com/elliothux/kitty-screen" target="_blank" rel="noopener">Kitty Screen</a>（MIT © elliothux）。</p>
           <p>MIT License · 欢迎 Fork 修改</p>
         </div>
         <div class="modal-actions">

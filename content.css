@@ -171,23 +171,25 @@
 .pet-idle {
   position: fixed;
   left: 0; top: 0;
-  width: 130px; height: 160px;
+  width: 200px;               /* 130 → 200，视觉上大约放大 1.5 倍 */
+  /* 不指定 height，让容器根据视频的自然长宽比自动收缩 */
   transform: translate(var(--pet-x), var(--pet-y));
   transition: transform var(--pet-walk-dur, 0ms) cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: auto;
   cursor: pointer;
   z-index: 2147483646;
   --pet-facing: 1;
+  line-height: 0;             /* 避免 video 下面出现 inline gap */
 }
 .pet-idle .pet-img.size-idle,
 .pet-idle .pet-video.size-idle {
-  width: 130px; height: auto; max-height: 160px;
+  width: 200px;
+  height: auto;               /* 让浏览器按视频实际比例来 —— 不再是"130 宽 × 160 高的框里飘一个 130 × 73 的视频" */
   transform: scaleX(var(--pet-facing));
   transition: transform 0.3s;
   filter: drop-shadow(0 8px 14px rgba(0,0,0,0.30));
   animation: idleBob 1.6s ease-in-out infinite;
   border-radius: 14px;
-  object-fit: cover;
   display: block;
 }
 /* 角落漫游的 alpha 视频也去掉圆角背景 + 清理毛边 */
@@ -211,14 +213,17 @@
   75%      { transform: scaleX(var(--pet-facing)) translateY(-3px) rotate(1.5deg); }
 }
 
-/* 悬停提示气泡 */
+/* 悬停提示气泡：紧贴视频底部 —— 用 top 而非 bottom，就没有容器外多余间距 */
 .pet-idle::after {
   content: '摸摸我 🐾';
-  position: absolute; bottom: -22px; left: 50%;
+  position: absolute;
+  top: 100%; left: 50%;         /* 100% = 紧贴容器底 */
+  margin-top: 4px;              /* 只留 4px 呼吸空间 */
   transform: translateX(-50%) translateY(6px);
   background: rgba(30,20,40,0.85); color: #fff;
   padding: 3px 10px; border-radius: 999px;
   font-size: 11px; white-space: nowrap;
+  line-height: 1.4;
   font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
   opacity: 0; pointer-events: none;
   transition: opacity 0.2s, transform 0.2s;

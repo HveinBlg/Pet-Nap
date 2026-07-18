@@ -371,8 +371,9 @@ function showIdle() {
     wrap.appendChild(img);
 
     // 初始位置：屏幕右下
+    // 尺寸对应 CSS 里的 .pet-idle 宽度 + 视频自然高度（约 16:9 → 200 x 113）
     const margin = 20;
-    const w = 130, h = 160;
+    const w = 200, h = 130;
     wrap.style.setProperty('--pet-x', (window.innerWidth  - w - margin) + 'px');
     wrap.style.setProperty('--pet-y', (window.innerHeight - h - margin) + 'px');
 
@@ -403,7 +404,7 @@ function hideIdle() {
 function scheduleRoam(wrap) {
   const doRoam = () => {
     if (!state.idleActive) return;
-    const w = 130, h = 160;
+    const w = 200, h = 130;
     const margin = 12;
     const tx = Math.random() * Math.max(margin, window.innerWidth  - w - margin);
     const ty = Math.random() * Math.max(margin, window.innerHeight - h - margin);

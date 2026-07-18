@@ -128,15 +128,16 @@ function ensureStylesLoaded(shadow, cb) {
 function updateHostPointerEvents() {
   const host = document.getElementById(HOST_ID);
   if (!host) return;
-  // 覆盖层时接管整个视口；漫游时只在小宠物上接管点击
+  // 只有开启 hardBlock 的休息模式才接管整个视口的点击
+  // 否则默认 pointer-events: none，让页面正常可交互
   if (state.overlayActive) {
     host.style.width = '100vw';
     host.style.height = '100vh';
-    host.style.pointerEvents = 'auto';
+    host.style.pointerEvents = 'none';   // 里面的关闭按钮等自己会打开
   } else if (state.idleActive) {
     host.style.width = '100vw';
     host.style.height = '100vh';
-    host.style.pointerEvents = 'none';   // 小宠物自身设 auto
+    host.style.pointerEvents = 'none';
   } else {
     host.style.width = '0';
     host.style.height = '0';
@@ -431,12 +432,18 @@ function showOverlay(mode, breakMinutes, onEnd) {
 
     const overlay = document.createElement('div');
     overlay.id = OVERLAY_ID;
-    overlay.className = 'pet-overlay ' + (mode === 'break' ? 'break-mode' : 'play-mode');
+    // hardBlock 决定是否强制遮盖 + 禁止滚动
+    const blocking = mode === 'break' && state.settings.hardBlock;
+    overlay.className = 'pet-overlay '
+      + (mode === 'break' ? 'break-mode ' : 'play-mode ')
+      + (blocking ? 'blocking' : 'passthrough');
 
-    // 背景遮罩
-    const bg = document.createElement('div');
-    bg.className = 'pet-overlay-bg';
-    overlay.appendChild(bg);
+    // 背景遮罩：只在 hardBlock=true 时才有
+    if (blocking) {
+      const bg = document.createElement('div');
+      bg.className = 'pet-overlay-bg';
+      overlay.appendChild(bg);
+    }
 
     // 宠物
     const petBox = document.createElement('div');
@@ -445,29 +452,31 @@ function showOverlay(mode, breakMinutes, onEnd) {
     petBox.appendChild(petImg);
     overlay.appendChild(petBox);
 
-    // 顶部文字 / 倒计时
-    const label = document.createElement('div');
-    label.className = 'pet-overlay-label';
+    // 角落浮标：小倒计时 / 关闭
+    const chip = document.createElement('div');
+    chip.className = 'pet-chip';
 
     if (mode === 'break') {
-      label.innerHTML = `
-        <div class="pet-tag">歇一歇吧</div>
-        <div class="pet-countdown" id="pnc">--:--</div>
-        <div class="pet-sub">离开屏幕，站起来走走，看看远处</div>
+      chip.innerHTML = `
+        <div class="flip-clock" id="pnc" role="timer" aria-live="polite">
+          <span class="flip-digit" data-d="0">0</span>
+          <span class="flip-digit" data-d="1">0</span>
+          <span class="flip-sep">:</span>
+          <span class="flip-digit" data-d="2">0</span>
+          <span class="flip-digit" data-d="3">0</span>
+        </div>
+        <button class="chip-close" aria-label="提前结束">✕</button>
       `;
-      // 关闭按钮不显示，强制休息
+      chip.classList.add('with-clock');
+      chip.querySelector('.chip-close').addEventListener('click', () => dismissOverlay(overlay, onEnd));
     } else {
-      // play mode - 抚摸模式，右上角有关闭
-      label.innerHTML = `
-        <div class="pet-tag">陪陪你</div>
-        <div class="pet-sub">点击宠物摸一下 · 完事点右上角关闭</div>
+      // play 模式：抚摸 · 无倒计时
+      chip.innerHTML = `
+        <span class="chip-icon">🐾</span>
+        <span class="chip-text">陪陪你 · 点宠物摸一下</span>
+        <button class="chip-close" aria-label="关闭">✕</button>
       `;
-      const closeBtn = document.createElement('button');
-      closeBtn.className = 'pet-close';
-      closeBtn.setAttribute('aria-label', '关闭');
-      closeBtn.innerHTML = '✕';
-      closeBtn.addEventListener('click', () => dismissOverlay(overlay, onEnd));
-      overlay.appendChild(closeBtn);
+      chip.querySelector('.chip-close').addEventListener('click', () => dismissOverlay(overlay, onEnd));
 
       // 点宠物 → 抚摸反馈
       petBox.addEventListener('click', (e) => {
@@ -475,7 +484,6 @@ function showOverlay(mode, breakMinutes, onEnd) {
         petBox.classList.remove('petting');
         void petBox.offsetWidth;
         petBox.classList.add('petting');
-        // 冒出爱心
         const heart = document.createElement('div');
         heart.className = 'pet-heart';
         heart.textContent = '❤';
@@ -484,20 +492,19 @@ function showOverlay(mode, breakMinutes, onEnd) {
         setTimeout(() => heart.remove(), 1200);
       });
     }
-    overlay.appendChild(label);
+    overlay.appendChild(chip);
 
     shadow.appendChild(overlay);
 
-    // 硬拦滚动（仅休息模式）
-    if (mode === 'break' && state.settings.hardBlock) {
+    // 硬拦滚动 + 暂停视频（仅 hardBlock 模式）
+    if (blocking) {
       document.documentElement.style.overflow = 'hidden';
       document.addEventListener('wheel', preventScroll, { passive: false });
       document.addEventListener('touchmove', preventScroll, { passive: false });
-      // 暂停页面上的其它视频
       document.querySelectorAll('video').forEach((v) => v.pause());
     }
 
-    // 倒计时（仅休息模式）
+    // 倒计时
     if (mode === 'break') {
       startCountdown(breakMinutes * 60, shadow.getElementById('pnc'), () => {
         dismissOverlay(overlay, onEnd);
@@ -506,15 +513,36 @@ function showOverlay(mode, breakMinutes, onEnd) {
   });
 }
 
-function startCountdown(totalSec, el, onDone) {
+function startCountdown(totalSec, clockEl, onDone) {
   let s = totalSec;
   let cancelled = false;
   state.cancelCountdown = () => { cancelled = true; };
+
+  // 翻页时钟：4 个 digit 元素 + 中间冒号
+  const digitEls = clockEl ? clockEl.querySelectorAll('.flip-digit') : [];
+
+  const flip = (el, next) => {
+    if (!el) return;
+    const cur = el.textContent;
+    if (cur === String(next)) return;
+    el.classList.remove('flipping');
+    // 强制重排以让动画重新触发
+    // eslint-disable-next-line no-void
+    void el.offsetWidth;
+    el.textContent = String(next);
+    el.classList.add('flipping');
+  };
+
   const paint = () => {
     if (cancelled) return;
     const m = Math.floor(s / 60);
     const sec = s % 60;
-    if (el) el.textContent = `${m}:${String(sec).padStart(2, '0')}`;
+    const ds = [Math.floor(m / 10), m % 10, Math.floor(sec / 10), sec % 10];
+    if (digitEls.length === 4) {
+      for (let i = 0; i < 4; i++) flip(digitEls[i], ds[i]);
+    } else if (clockEl) {
+      clockEl.textContent = `${m}:${String(sec).padStart(2, '0')}`;
+    }
     if (s <= 0) { onDone(); return; }
     s--;
     setTimeout(paint, 1000);

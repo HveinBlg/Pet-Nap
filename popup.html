@@ -32,39 +32,24 @@
       <button class="btn primary small" id="play-now">陪我一下</button>
     </section>
 
-    <!-- 时间设置 -->
+    <!-- 时长预设 -->
     <section class="card">
-      <div class="row">
-        <label class="row-label">累计使用</label>
-        <div class="row-value">
-          <input type="range" id="usage-limit" min="1" max="120" value="25" />
-          <span class="row-num" id="usage-limit-val">25 分钟</span>
+      <div class="time-row">
+        <span class="time-label">使用</span>
+        <div class="chips" data-key="usageLimit">
+          <button data-value="15">15 分</button>
+          <button data-value="25">25 分</button>
+          <button data-value="45">45 分</button>
+          <button data-value="60">60 分</button>
         </div>
       </div>
-      <div class="row">
-        <label class="row-label">强制休息</label>
-        <div class="row-value">
-          <input type="range" id="break-time" min="1" max="30" value="3" />
-          <span class="row-num" id="break-time-val">3 分钟</span>
+      <div class="time-row">
+        <span class="time-label">休息</span>
+        <div class="chips" data-key="breakTime">
+          <button data-value="1">1 分</button>
+          <button data-value="3">3 分</button>
+          <button data-value="5">5 分</button>
         </div>
-      </div>
-    </section>
-
-    <!-- 模式 + 域名 -->
-    <section class="card">
-      <div class="tab-row">
-        <label class="pill">
-          <input type="radio" name="mode" value="domain" checked />
-          <span>仅在特定网站</span>
-        </label>
-        <label class="pill">
-          <input type="radio" name="mode" value="global" />
-          <span>所有网站</span>
-        </label>
-      </div>
-      <div id="domains-wrap">
-        <textarea id="domains" placeholder="每行一个域名，如&#10;youtube.com&#10;bilibili.com"></textarea>
-        <div class="hint">每行一个域名，会匹配所有子域名</div>
       </div>
     </section>
 
@@ -72,26 +57,41 @@
     <section class="card">
       <div class="section-title">
         <span>选择你的萌宠</span>
-        <button class="btn small ghost" id="add-pet">+ 上传我家宠物</button>
+        <button class="btn small ghost" id="add-pet">+ 上传</button>
       </div>
       <div class="pet-grid" id="pet-grid"></div>
     </section>
 
-    <!-- 高级 -->
-    <section class="card">
-      <div class="row row-checkbox">
+    <!-- 更多设置（折叠） -->
+    <details class="more-card">
+      <summary>
+        <span>更多设置</span>
+        <span class="chev">›</span>
+      </summary>
+      <div class="more-body">
+        <div class="tab-row">
+          <label class="pill">
+            <input type="radio" name="mode" value="domain" checked />
+            <span>只在特定网站</span>
+          </label>
+          <label class="pill">
+            <input type="radio" name="mode" value="global" />
+            <span>所有网站</span>
+          </label>
+        </div>
+        <div id="domains-wrap">
+          <textarea id="domains" placeholder="每行一个域名"></textarea>
+        </div>
         <label class="check-label">
           <input type="checkbox" id="idleRoaming" checked />
           <span>闲时宠物在页面角落漫游</span>
         </label>
-      </div>
-      <div class="row row-checkbox">
         <label class="check-label">
-          <input type="checkbox" id="hardBlock" checked />
-          <span>休息时禁止滚动（强制休息）</span>
+          <input type="checkbox" id="hardBlock" />
+          <span>强制模式（休息时禁止滚动）</span>
         </label>
       </div>
-    </section>
+    </details>
 
     <footer class="ftr">
       <span>v0.1.0 · MIT</span>

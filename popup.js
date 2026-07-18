@@ -58,18 +58,34 @@ function setStorage(obj) {
 function renderAll() {
   const s = currentSettings;
   $('#enabled').checked        = s.enabled;
-  $('#usage-limit').value      = s.usageLimit;
-  $('#usage-limit-val').textContent = `${s.usageLimit} 分钟`;
-  $('#break-time').value       = s.breakTime;
-  $('#break-time-val').textContent  = `${s.breakTime} 分钟`;
   $('#domains').value          = s.customDomains.join('\n');
   $('#idleRoaming').checked    = s.idleRoaming;
   $('#hardBlock').checked      = s.hardBlock;
   $(`input[name="mode"][value="${s.mode}"]`).checked = true;
   $('#domains-wrap').style.display = s.mode === 'domain' ? '' : 'none';
 
+  syncChips('usageLimit', s.usageLimit);
+  syncChips('breakTime',  s.breakTime);
+
   renderCurrentPet();
   renderPetGrid();
+}
+
+// 让选中的 chip 高亮；若没有匹配项，就高亮"最接近"的
+function syncChips(key, value) {
+  const wrap = document.querySelector(`.chips[data-key="${key}"]`);
+  if (!wrap) return;
+  const btns = [...wrap.querySelectorAll('button')];
+  let match = btns.find((b) => +b.dataset.value === value);
+  if (!match) {
+    // 没精确匹配（用户之前 slider 时代的老值）→ 就近取一个
+    match = btns.reduce((best, b) => {
+      const bv = +b.dataset.value;
+      const dv = Math.abs(bv - value);
+      return (!best || dv < Math.abs(+best.dataset.value - value)) ? b : best;
+    }, null);
+  }
+  btns.forEach((b) => b.classList.toggle('active', b === match));
 }
 
 function renderCurrentPet() {
@@ -177,21 +193,19 @@ function bindEvents() {
     setStorage({ enabled: e.target.checked });
   });
 
-  const debouncedSave = (key, val) => setStorage({ [key]: val });
-
-  $('#usage-limit').addEventListener('input', (e) => {
-    const v = +e.target.value;
-    $('#usage-limit-val').textContent = `${v} 分钟`;
-    currentSettings.usageLimit = v;
+  // 时长预设 chip 点击
+  document.querySelectorAll('.chips').forEach((wrap) => {
+    const key = wrap.dataset.key;
+    wrap.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const val = +btn.dataset.value;
+      wrap.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentSettings[key] = val;
+      setStorage({ [key]: val });
+    });
   });
-  $('#usage-limit').addEventListener('change', (e) => debouncedSave('usageLimit', +e.target.value));
-
-  $('#break-time').addEventListener('input', (e) => {
-    const v = +e.target.value;
-    $('#break-time-val').textContent = `${v} 分钟`;
-    currentSettings.breakTime = v;
-  });
-  $('#break-time').addEventListener('change', (e) => debouncedSave('breakTime', +e.target.value));
 
   $$('input[name="mode"]').forEach((r) => {
     r.addEventListener('change', (e) => {

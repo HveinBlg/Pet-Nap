@@ -48,7 +48,7 @@
     customDomains: DEFAULT_DOMAINS,
     activePetId: 'orange-cat',   // 当前使用的宠物 ID（可以是预设 ID 或 'custom:xxx'）
     idleRoaming: true,           // 是否开启平时的漫游小宠物
-    hardBlock: true,             // 触发时是否禁止滚动 / 强制休息
+    hardBlock: false,            // 默认 false：不遮盖背景 / 不禁止滚动，只透明覆盖
     mode: 'domain',              // 'domain'=只在特定网站计时  'global'=在所有网站计时
   });
 

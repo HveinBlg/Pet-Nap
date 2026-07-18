@@ -55,7 +55,63 @@ function getShadow({ create = true } = {}) {
   }
   if (!host) return null;
   if (!host.shadowRoot) host.attachShadow({ mode: 'open' });
+  ensureFilters(host.shadowRoot);
   return host.shadowRoot;
+}
+
+// 注入 SVG 滤镜到 shadow DOM
+// - pet-nap-clean-edges：清理 chromakey 抠像残留的粉紫色毛边
+//   1. 侵蚀 alpha 通道 0.75px，咬掉最外圈 halo
+//   2. feColorMatrix：让"高红+高蓝、低绿"（=粉紫色）像素 alpha 降低
+function ensureFilters(shadow) {
+  if (shadow.querySelector('.pet-nap-filters')) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('class', 'pet-nap-filters');
+  svg.setAttribute('width', '0');
+  svg.setAttribute('height', '0');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;';
+
+  const defs = document.createElementNS(NS, 'defs');
+
+  const filter = document.createElementNS(NS, 'filter');
+  filter.setAttribute('id', 'pet-nap-clean-edges');
+  filter.setAttribute('color-interpolation-filters', 'sRGB');
+  filter.setAttribute('x', '0'); filter.setAttribute('y', '0');
+  filter.setAttribute('width', '100%'); filter.setAttribute('height', '100%');
+
+  // 1. 侵蚀 alpha 0.75 像素
+  const erode = document.createElementNS(NS, 'feMorphology');
+  erode.setAttribute('operator', 'erode');
+  erode.setAttribute('radius', '0.75');
+  erode.setAttribute('in', 'SourceAlpha');
+  erode.setAttribute('result', 'e');
+
+  // 2. 用侵蚀后的 alpha 遮罩 SourceGraphic
+  const compose = document.createElementNS(NS, 'feComposite');
+  compose.setAttribute('in', 'SourceGraphic');
+  compose.setAttribute('in2', 'e');
+  compose.setAttribute('operator', 'in');
+  compose.setAttribute('result', 'src');
+
+  // 3. 压制粉紫色像素 alpha
+  const matrix = document.createElementNS(NS, 'feColorMatrix');
+  matrix.setAttribute('in', 'src');
+  matrix.setAttribute('type', 'matrix');
+  matrix.setAttribute('values',
+    '1    0    0    0  0 ' +
+    '0    1    0    0  0 ' +
+    '0    0    1    0  0 ' +
+    '-0.3 0.6 -0.3  1  0'
+  );
+
+  filter.appendChild(erode);
+  filter.appendChild(compose);
+  filter.appendChild(matrix);
+  defs.appendChild(filter);
+  svg.appendChild(defs);
+  shadow.appendChild(svg);
 }
 
 function ensureStylesLoaded(shadow, cb) {

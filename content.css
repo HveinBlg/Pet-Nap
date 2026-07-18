@@ -66,7 +66,8 @@
   box-shadow: none !important;
   border-radius: 0 !important;
   background: transparent !important;
-  filter: drop-shadow(0 20px 40px rgba(0,0,0,0.35));   /* drop-shadow 会跟着 alpha 走，不出矩形 */
+  /* 组合滤镜：1) SVG 清理粉紫色毛边  2) drop-shadow 跟着 alpha 走的柔和阴影 */
+  filter: url(#pet-nap-clean-edges) drop-shadow(0 20px 40px rgba(0,0,0,0.35));
 }
 
 /* ============ 上传照片的呼吸/漂浮动画 ============ */
@@ -165,11 +166,12 @@
   object-fit: cover;
   display: block;
 }
-/* 角落漫游的 alpha 视频也去掉圆角背景 */
+/* 角落漫游的 alpha 视频也去掉圆角背景 + 清理毛边 */
 .pet-idle .pet-video[data-alpha="true"].size-idle {
   border-radius: 0;
   background: transparent;
   object-fit: contain;
+  filter: url(#pet-nap-clean-edges) drop-shadow(0 8px 14px rgba(0,0,0,0.30));
 }
 .pet-idle.walking .pet-img.size-idle,
 .pet-idle.walking .pet-video.size-idle {

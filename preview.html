@@ -49,8 +49,20 @@
       position: absolute; bottom: 0; left: 50%;
       transform: translateX(-50%);
       width: 400px; height: auto;
-      filter: drop-shadow(0 10px 30px rgba(0,0,0,0.5));
       pointer-events: none;
+    }
+    .browser-frame video.raw {
+      filter: drop-shadow(0 10px 30px rgba(0,0,0,0.5));
+    }
+    .browser-frame video.cleaned {
+      filter: url(#pet-nap-clean-edges) drop-shadow(0 10px 30px rgba(0,0,0,0.5));
+    }
+    .compare-label {
+      position: absolute; top: 8px; left: 8px;
+      background: rgba(0,0,0,0.7); color: #ffd167;
+      padding: 3px 8px; font-size: 11px; border-radius: 4px;
+      font-family: monospace; letter-spacing: 1px;
+      z-index: 5;
     }
     .caption { font-size: 13px; color: #c0b8c8; text-align: center; }
     .caption b { color: #ffd167; }
@@ -91,10 +103,34 @@
 
   <div class="col">
     <div class="browser-frame">
+      <div class="compare-label">原视频 · 有粉紫毛边</div>
       <div class="browser-mock"></div>
-      <video src="presets/orange-cat.webm" muted autoplay loop playsinline></video>
+      <video class="raw" src="presets/orange-cat.webm" muted autoplay loop playsinline></video>
     </div>
-    <div class="caption"><b>大胖橘 · 透明背景</b> 直接"坐"在浏览器内容之上</div>
+    <div class="caption"><b>原始</b> · 抠像残留 chroma spill</div>
+
+    <div class="browser-frame">
+      <div class="compare-label">SVG 滤镜清理后</div>
+      <div class="browser-mock"></div>
+      <video class="cleaned" src="presets/orange-cat.webm" muted autoplay loop playsinline></video>
+    </div>
+    <div class="caption"><b>清理后</b> · alpha 侵蚀 + 粉色抑制</div>
   </div>
+
+  <!-- SVG 滤镜定义 -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <filter id="pet-nap-clean-edges" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%">
+        <feMorphology operator="erode" radius="0.75" in="SourceAlpha" result="e"/>
+        <feComposite in="SourceGraphic" in2="e" operator="in" result="src"/>
+        <feColorMatrix in="src" type="matrix" values="
+          1    0    0    0  0
+          0    1    0    0  0
+          0    0    1    0  0
+         -0.3  0.6 -0.3  1  0
+        "/>
+      </filter>
+    </defs>
+  </svg>
 </body>
 </html>

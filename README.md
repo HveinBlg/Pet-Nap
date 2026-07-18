@@ -9,7 +9,7 @@
 | 功能 | 说明 |
 |---|---|
 | ⏰ **强制休息** | 累计使用 N 分钟后，宠物铺满屏幕 + 倒计时 + 禁止滚动 |
-| 🐱 **多种宠物** | 内置"小橘"、"阿柴"两只 SVG 动画宠物，会呼吸/眨眼/摇尾巴 |
+| 🐱 **真实猫咪** | 内置真实猫咪视频（MP4），躺着的姿态陪你休息 |
 | 📷 **上传我家宠物** | 拍张照上传，宠物就会以你家宝贝的样子陪你（内置简易抠图） |
 | 🚶 **闲时漫游** | 平时一只小宠物在浏览器角落随机走动 |
 | 🫶 **点击变大** | 点角落小宠物 → 平滑变大铺屏 → 可抚摸互动 |
@@ -45,8 +45,8 @@ pet-nap-extension/
 ├── shared.js              # 存储 · 域名 · 设置工具
 ├── popup.html/js/css      # 设置面板 + 上传弹窗
 ├── presets/
-│   ├── orange.svg         # 预设：小橘（原创 SVG）
-│   └── shiba.svg          # 预设：阿柴（原创 SVG）
+│   ├── 19091266-hd_1920_1080_30fps.mp4  # 预设猫咪 A（1080p, Pexels ID 19091266）
+│   └── 19787248-uhd_3840_2160_25fps.mp4 # 预设猫咪 B（4K, Pexels ID 19787248）
 ├── assets/icon-*.png      # 扩展图标
 ├── scripts/gen_icons.py   # 图标生成脚本（纯 stdlib）
 ├── LICENSE                # MIT
@@ -54,21 +54,22 @@ pet-nap-extension/
 └── README.md
 ```
 
-## 🛠 想加自己的 WebM 宠物？
+## 🛠 加更多预设宠物
 
-真实猫咪视频比 SVG 更有代入感。如果你想用 WebM/MP4 视频作为宠物：
+`shared.js` 的 `PRESET_PETS` 数组决定内置宠物。加视频的步骤：
 
-1. 从 [Pexels](https://www.pexels.com/search/videos/cat/) 或 [Pixabay](https://pixabay.com/videos/search/cat/) 下载 CC0 的宠物视频（推荐 5-15 秒循环）
-2. 用 [Handbrake](https://handbrake.fr/) 转成 WebM 格式，去掉音轨，压缩到 1-3MB
-3. 扔到 `presets/` 目录，例如 `presets/tabby-nap.webm`
-4. 在 `shared.js` 的 `PRESET_PETS` 数组里加一项：
+1. 从 [Pexels](https://www.pexels.com/search/videos/cat/) 或 [Pixabay](https://pixabay.com/videos/search/cat/) 下载 CC0 的宠物视频（推荐 5-15 秒可循环）
+2. 用 [Handbrake](https://handbrake.fr/) / [CloudConvert](https://cloudconvert.com/) 压到 1080p 以内、去音轨、< 5MB
+3. 扔到 `presets/` 目录
+4. 在 `shared.js` 的 `PRESET_PETS` 追加：
    ```js
-   { id: 'tabby-nap', name: '躺平橘', species: 'cat', type: 'video',
-     asset: 'presets/tabby-nap.webm', thumb: 'presets/tabby-thumb.png' }
+   { id: 'cat-loaf', name: '面包猫', species: 'cat', type: 'video',
+     mime: 'video/mp4', asset: 'presets/cat-loaf.mp4' }
    ```
-5. 需要在 `content.js` 的 `createPetElement` 里加分支处理 `type === 'video'` → 生成 `<video autoplay loop muted>` 而不是 `<img>`
 
-**⚠️ 版权提醒**：不要用 Cat Gatekeeper 的 `neko1.webm` / `neko2.webm`（作者保留所有权利）。
+代码已经支持 `type: 'video'` 会自动用 `<video autoplay loop muted>` 播放。
+
+**⚠️ 版权提醒**：不要用 Cat Gatekeeper 的 `neko1.webm` / `neko2.webm`（作者保留所有权利）。用之前确认视频的授权协议。
 
 ## 🗺 后续路线
 

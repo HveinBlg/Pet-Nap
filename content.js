@@ -219,18 +219,37 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('pagehide', () => state.saveUsage());
 
 // ============ 宠物渲染 ============
-function petImgSrc(pet) {
+function petAssetSrc(pet) {
   if (!pet) return '';
   if (pet.kind === 'custom') return pet.dataUrl || '';
   return chrome.runtime.getURL(pet.asset);
 }
 
-// 生成一个宠物 <img> 元素，附带呼吸/摇摆动画类
+// 生成宠物元素：视频用 <video>，图片/自定义上传用 <img>
 function createPetElement(pet, sizeClass) {
+  const isVideo = pet && pet.type === 'video';
+  const src = petAssetSrc(pet);
+
+  if (isVideo) {
+    const v = document.createElement('video');
+    v.className = `pet-video ${sizeClass}`;
+    v.dataset.petKind = pet?.kind || 'preset';
+    v.src = src;
+    v.muted = true;
+    v.autoplay = true;
+    v.loop = true;
+    v.playsInline = true;
+    v.preload = 'auto';
+    v.setAttribute('playsinline', '');
+    v.setAttribute('muted', '');
+    v.play?.().catch(() => { /* iOS/autoplay 政策 → 静默失败 */ });
+    return v;
+  }
+
   const img = document.createElement('img');
   img.className = `pet-img ${sizeClass}`;
   img.dataset.petKind = pet?.kind || 'preset';
-  img.src = petImgSrc(pet);
+  img.src = src;
   img.draggable = false;
   img.alt = pet?.name || 'pet';
   return img;
@@ -261,7 +280,7 @@ function showIdle() {
 
     // 初始位置：屏幕右下
     const margin = 20;
-    const w = 90, h = 108;
+    const w = 130, h = 160;
     wrap.style.setProperty('--pet-x', (window.innerWidth  - w - margin) + 'px');
     wrap.style.setProperty('--pet-y', (window.innerHeight - h - margin) + 'px');
 
@@ -292,7 +311,7 @@ function hideIdle() {
 function scheduleRoam(wrap) {
   const doRoam = () => {
     if (!state.idleActive) return;
-    const w = 90, h = 108;
+    const w = 130, h = 160;
     const margin = 12;
     const tx = Math.random() * Math.max(margin, window.innerWidth  - w - margin);
     const ty = Math.random() * Math.max(margin, window.innerHeight - h - margin);

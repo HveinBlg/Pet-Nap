@@ -1,6 +1,29 @@
 // Pet Nap · Popup 设置面板 + 上传流程
 'use strict';
 
+// ============ 独立预览兼容层 ============
+// preview.html 里直接打开 popup.html 时，chrome API 不存在
+// 这里提供一个 no-op 版让 UI 至少能正常渲染
+if (typeof chrome === 'undefined' || !chrome?.storage?.local) {
+  globalThis.chrome = {
+    storage: {
+      local: {
+        get: (keys, cb) => cb({}),
+        set: (_obj, cb) => cb && cb(),
+        onChanged: { addListener: () => {} },
+      },
+    },
+    tabs: {
+      query: (_opts, cb) => cb([{ id: -1 }]),
+      sendMessage: (_id, _msg, cb) => cb && cb({ ok: false }),
+    },
+    runtime: {
+      getURL: (p) => p,
+      lastError: null,
+    },
+  };
+}
+
 const shared = globalThis.PetNapShared;
 const CUSTOM_PETS_KEY = 'customPets';
 const MAX_CUSTOM_PETS = 8;
@@ -51,10 +74,25 @@ function renderAll() {
 
 function renderCurrentPet() {
   const pet = shared.getActivePet(currentSettings, currentCustom);
-  const img = $('#pet-preview-img');
-  img.src = pet.kind === 'custom' ? pet.dataUrl : chrome.runtime.getURL(pet.asset);
+  const preview = $('#pet-preview');
+  preview.innerHTML = '';
+  const src = pet.kind === 'custom' ? pet.dataUrl : chrome.runtime.getURL(pet.asset);
+  if (pet.type === 'video') {
+    const v = document.createElement('video');
+    v.src = src;
+    v.muted = true; v.autoplay = true; v.loop = true; v.playsInline = true;
+    v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
+    preview.appendChild(v);
+  } else {
+    const img = document.createElement('img');
+    img.src = src;
+    preview.appendChild(img);
+  }
   $('#pet-name').textContent = pet.name || '未命名';
-  $('#pet-status').textContent = pet.kind === 'custom' ? '自定义 · 我家的' : `预设 · ${pet.species === 'cat' ? '猫咪' : '狗狗'}`;
+  const label = pet.kind === 'custom'
+    ? '自定义 · 我家的'
+    : `预设 · ${pet.species === 'cat' ? '猫咪' : (pet.species === 'dog' ? '狗狗' : '宠物')}`;
+  $('#pet-status').textContent = label;
 }
 
 function renderPetGrid() {
@@ -68,7 +106,8 @@ function renderPetGrid() {
     grid.appendChild(makeTile({
       id: p.id,
       name: p.name,
-      thumbSrc: chrome.runtime.getURL(p.thumb),
+      thumbSrc: chrome.runtime.getURL(p.asset),
+      isVideo: p.type === 'video',
       active: activeId === p.id,
       isCustom: false,
     }));
@@ -81,6 +120,7 @@ function renderPetGrid() {
       id: activeKey,
       name: cp.name || '我家的',
       thumbSrc: cp.dataUrl,
+      isVideo: false,
       active: activeId === activeKey,
       isCustom: true,
       customId: cp.id,
@@ -88,12 +128,15 @@ function renderPetGrid() {
   });
 }
 
-function makeTile({ id, name, thumbSrc, active, isCustom, customId }) {
+function makeTile({ id, name, thumbSrc, isVideo, active, isCustom, customId }) {
   const el = document.createElement('div');
   el.className = 'pet-tile' + (active ? ' active' : '');
   el.dataset.petId = id;
+  const media = isVideo
+    ? `<video src="${thumbSrc}" muted playsinline loop autoplay preload="auto"></video>`
+    : `<img src="${thumbSrc}" alt="" />`;
   el.innerHTML = `
-    <img src="${thumbSrc}" alt="" />
+    ${media}
     <div class="tile-name">${escapeHtml(name)}</div>
     ${isCustom ? `<button class="tile-del custom" data-custom-id="${customId}" title="删除">✕</button>` : ''}
   `;

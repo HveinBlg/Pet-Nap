@@ -25,14 +25,17 @@
       border: none; border-radius: 22px;
       background: white; display: block;
     }
-    .pet-frame {
-      width: 240px; height: 300px;
+    .video-frame {
+      width: 380px;
       border-radius: 22px; overflow: hidden;
-      background: linear-gradient(135deg, #ffe0e8, #e6efff);
-      display: flex; align-items: center; justify-content: center;
-      padding: 10px;
+      background: linear-gradient(135deg, #2d1b3d, #1a1625);
+      padding: 8px;
     }
-    .pet-frame img { width: 100%; height: 100%; object-fit: contain; }
+    .video-frame video {
+      width: 100%; display: block;
+      border-radius: 14px;
+      background: black;
+    }
     .caption { font-size: 13px; color: #c0b8c8; text-align: center; }
     .caption b { color: #ffd167; }
     h1 {
@@ -55,10 +58,10 @@
   <div class="col">
     <h1>🐾 Pet Nap 预览</h1>
     <div class="info">
-      <p>左边是设置面板（点击工具栏图标弹出），右边是预设宠物 —— 会呼吸、眨眼、摇尾巴。</p>
-      <small>preview.html 只演示 popup 视觉，真正的<b>全屏遮罩</b>和<b>闲时漫游</b>需要安装到 Chrome 才能体验。</small>
+      <p>左边是设置面板（点击工具栏图标弹出）。右边两个是真实猫咪视频预设。</p>
+      <small>preview.html 里 popup 不会真的保存设置（因为没有 chrome.storage API），但界面会完整渲染，宠物库里的视频也会自动播放。</small>
       <div class="note">
-        ⚠️ preview.html 里 popup 不会保存设置（因为没有 chrome.storage API），仅用于查看视觉。
+        ⚠️ 真正的<b>全屏遮罩休息</b>和<b>闲时页面漫游</b>需要装到 Chrome 才能体验。
       </div>
     </div>
   </div>
@@ -71,44 +74,15 @@
   </div>
 
   <div class="col">
-    <div class="frame pet-frame">
-      <img src="presets/orange.svg" alt="小橘" />
+    <div class="video-frame">
+      <video src="presets/19091266-hd_1920_1080_30fps.mp4" muted autoplay loop playsinline></video>
     </div>
-    <div class="caption"><b>小橘</b> · 会呼吸、眨眼、摇尾巴、耳朵抖</div>
+    <div class="caption"><b>橘猫 A</b> · 1080p · 4MB</div>
 
-    <div class="frame pet-frame">
-      <img src="presets/shiba.svg" alt="阿柴" />
+    <div class="video-frame">
+      <video src="presets/19787248-uhd_3840_2160_25fps.mp4" muted autoplay loop playsinline></video>
     </div>
-    <div class="caption"><b>阿柴</b> · 会呼吸、摇尾巴、伸舌头喘气</div>
+    <div class="caption"><b>橘猫 B</b> · 4K · 25MB（建议压到 1080p）</div>
   </div>
-
-  <script>
-    // 给 popup.html 里的 chrome API 打个补丁，让它在 preview 时不报错
-    // 通过 postMessage 或 blob URL 稍嫌复杂，简单起见让 iframe 里的 chrome 变成假的
-    const frames = document.querySelectorAll('iframe');
-    frames.forEach((f) => {
-      f.addEventListener('load', () => {
-        try {
-          const win = f.contentWindow;
-          win.chrome = win.chrome || {};
-          win.chrome.storage = win.chrome.storage || {
-            local: {
-              get: (keys, cb) => cb({}),
-              set: (obj, cb) => cb && cb(),
-              onChanged: { addListener: () => {} },
-            },
-          };
-          win.chrome.tabs = win.chrome.tabs || {
-            query: (opts, cb) => cb([{ id: 1 }]),
-            sendMessage: (id, msg, cb) => cb && cb({ ok: true }),
-          };
-          win.chrome.runtime = win.chrome.runtime || {
-            getURL: (p) => p,
-            lastError: null,
-          };
-        } catch {}
-      });
-    });
-  </script>
 </body>
 </html>

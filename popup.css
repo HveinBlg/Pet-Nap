@@ -62,8 +62,9 @@ body {
   overflow: hidden;
   border: 1px solid rgba(0,0,0,0.05);
 }
-.pet-preview img {
-  width: 90%; height: 90%; object-fit: contain;
+.pet-preview img,
+.pet-preview video {
+  width: 100%; height: 100%; object-fit: cover;
   display: block;
 }
 .pet-name { font-size: 15px; font-weight: 700; }
@@ -165,8 +166,10 @@ textarea#domains:focus { border-color: #ff8fb1; }
   border-color: #ff5a89;
   box-shadow: 0 0 0 3px rgba(255,90,137,0.2);
 }
-.pet-tile img {
-  width: 85%; height: 85%; object-fit: contain;
+.pet-tile img,
+.pet-tile video {
+  width: 100%; height: 100%; object-fit: cover;
+  display: block;
 }
 .pet-tile .tile-name {
   position: absolute; bottom: 0; left: 0; right: 0;

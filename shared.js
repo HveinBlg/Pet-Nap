@@ -21,23 +21,25 @@
     'instagram.com',
   ]);
 
-  // 预设宠物库（SVG 内置）
+  // 预设宠物库（视频/图片）
+  // - type: 'video' → 用 <video> 播放
+  // - type: 'image' → 用 <img> 显示
   const PRESET_PETS = Object.freeze([
     {
-      id: 'orange',
-      name: '小橘',
+      id: 'preset-a',
+      name: '橘猫 A',
       species: 'cat',
-      type: 'svg',
-      asset: 'presets/orange.svg',
-      thumb: 'presets/orange.svg',
+      type: 'video',
+      mime: 'video/mp4',
+      asset: 'presets/19091266-hd_1920_1080_30fps.mp4',
     },
     {
-      id: 'shiba',
-      name: '阿柴',
-      species: 'dog',
-      type: 'svg',
-      asset: 'presets/shiba.svg',
-      thumb: 'presets/shiba.svg',
+      id: 'preset-b',
+      name: '橘猫 B',
+      species: 'cat',
+      type: 'video',
+      mime: 'video/mp4',
+      asset: 'presets/19787248-uhd_3840_2160_25fps.mp4',
     },
   ]);
 
@@ -46,7 +48,7 @@
     usageLimit: 25,              // 累计多少分钟触发（默认 25 min = 一个番茄钟）
     breakTime: 3,                // 休息时长（分钟）
     customDomains: DEFAULT_DOMAINS,
-    activePetId: 'orange',       // 当前使用的宠物 ID（可以是预设 ID 或 'custom:xxx'）
+    activePetId: 'preset-a',     // 当前使用的宠物 ID（可以是预设 ID 或 'custom:xxx'）
     idleRoaming: true,           // 是否开启平时的漫游小宠物
     hardBlock: true,             // 触发时是否禁止滚动 / 强制休息
     mode: 'domain',              // 'domain'=只在特定网站计时  'global'=在所有网站计时

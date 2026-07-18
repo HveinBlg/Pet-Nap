@@ -19,9 +19,17 @@ Copyright © 2025 zokuzoku (konekone2026)
 以下内容均为 Pet Nap 独立创作，**未复用**任何 Cat Gatekeeper 的素材：
 
 - ✅ 全部图标（`assets/icon-*.png`）：由 `scripts/gen_icons.py` 程序生成
-- ✅ 预设宠物（`presets/orange.svg`、`presets/shiba.svg`）：原创 SVG，含 CSS 动画
 - ✅ 项目名称 "Pet Nap · 宠物打盹"、UI 文案、界面样式
 - ✅ 新增功能：宠物库、上传自定义宠物、闲时角落漫游、点击变大、抚摸模式
+
+## 预设宠物视频
+
+`presets/*.mp4` 中的视频文件来自第三方平台（文件名的数字为 Pexels 视频 ID）：
+
+- `19091266-hd_1920_1080_30fps.mp4` — Pexels video ID [19091266](https://www.pexels.com/video/19091266/)
+- `19787248-uhd_3840_2160_25fps.mp4` — Pexels video ID [19787248](https://www.pexels.com/video/19787248/)
+
+Pexels 上的内容使用 [Pexels License](https://www.pexels.com/license/)，允许免费商用、修改，无需署名。使用前请自行确认视频当前的授权协议。
 
 ## 声明
 

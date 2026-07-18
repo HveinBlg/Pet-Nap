@@ -475,17 +475,11 @@ function showOverlay(mode, breakMinutes, onEnd) {
 
     if (mode === 'break') {
       const clock = document.createElement('div');
-      clock.className = 'flip-clock';
+      clock.className = 'pet-timer';
       clock.id = 'pnc';
       clock.setAttribute('role', 'timer');
       clock.setAttribute('aria-live', 'polite');
-      clock.innerHTML = `
-        <span class="flip-digit" data-d="0">0</span>
-        <span class="flip-digit" data-d="1">0</span>
-        <span class="flip-sep">:</span>
-        <span class="flip-digit" data-d="2">0</span>
-        <span class="flip-digit" data-d="3">0</span>
-      `;
+      clock.textContent = '--:--';
       row.appendChild(clock);
     }
 
@@ -546,31 +540,12 @@ function startCountdown(totalSec, clockEl, onDone) {
   let cancelled = false;
   state.cancelCountdown = () => { cancelled = true; };
 
-  // 翻页时钟：4 个 digit 元素 + 中间冒号
-  const digitEls = clockEl ? clockEl.querySelectorAll('.flip-digit') : [];
-
-  const flip = (el, next) => {
-    if (!el) return;
-    const cur = el.textContent;
-    if (cur === String(next)) return;
-    el.classList.remove('flipping');
-    // 强制重排以让动画重新触发
-    // eslint-disable-next-line no-void
-    void el.offsetWidth;
-    el.textContent = String(next);
-    el.classList.add('flipping');
-  };
-
   const paint = () => {
     if (cancelled) return;
     const m = Math.floor(s / 60);
     const sec = s % 60;
-    const ds = [Math.floor(m / 10), m % 10, Math.floor(sec / 10), sec % 10];
-    if (digitEls.length === 4) {
-      for (let i = 0; i < 4; i++) flip(digitEls[i], ds[i]);
-    } else if (clockEl) {
-      clockEl.textContent = `${m}:${String(sec).padStart(2, '0')}`;
-    }
+    // Cat Gatekeeper 风格：分钟不补 0，秒补 0 —— "0:59"、"12:34"
+    if (clockEl) clockEl.textContent = `${m}:${String(sec).padStart(2, '0')}`;
     if (s <= 0) { onDone(); return; }
     s--;
     setTimeout(paint, 1000);

@@ -216,14 +216,14 @@ function bindEvents() {
   $('#play-now').addEventListener('click', async () => {
     const tab = await getActiveTab();
     if (!tab?.id) return alert('请在网页 Tab 中使用');
-    chrome.tabs.sendMessage(tab.id, { type: 'PLAY_NOW' }, () => {
-      // 忽略错误：可能页面还没注入
-      if (chrome.runtime.lastError) {
-        alert('这个页面暂时不能使用（比如 chrome:// 内部页面）');
-      } else {
-        window.close();
-      }
-    });
+    const url = tab.url || '';
+    // chrome:// / edge:// / about: / chrome-extension:// 等特殊页面不能注入
+    if (/^(chrome|edge|about|chrome-extension|file):/.test(url)) {
+      return alert('这个页面（' + url.split('://')[0] + '://）不能注入脚本，换个普通网页试试～');
+    }
+    const ok = await sendPlayNow(tab.id);
+    if (ok) window.close();
+    else alert('没能唤起宠物，试试刷新一下页面再来');
   });
 
   // 上传流程
@@ -239,6 +239,42 @@ function bindEvents() {
 
 function getActiveTab() {
   return new Promise((r) => chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => r(tabs[0])));
+}
+
+// 发送 PLAY_NOW 消息；若内容脚本还没注入到该 tab（比如扩展刚安装 / 更新），
+// 用 chrome.scripting 主动注入一次再重试。
+async function sendPlayNow(tabId) {
+  const trySend = () => new Promise((resolve) => {
+    try {
+      chrome.tabs.sendMessage(tabId, { type: 'PLAY_NOW' }, () => {
+        if (chrome.runtime.lastError) resolve(false);
+        else resolve(true);
+      });
+    } catch { resolve(false); }
+  });
+
+  // 第一次尝试
+  if (await trySend()) return true;
+
+  // 注入 shared.js + content.js
+  if (!chrome.scripting?.executeScript) return false;
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ['shared.js', 'content.js'],
+    });
+    await chrome.scripting.insertCSS({
+      target: { tabId },
+      files: ['content.css'],
+    }).catch(() => { /* content.css 通过 web_accessible_resources 加载即可，失败不致命 */ });
+  } catch (err) {
+    console.warn('inject failed:', err);
+    return false;
+  }
+
+  // 稍等一下让脚本初始化
+  await new Promise((r) => setTimeout(r, 150));
+  return trySend();
 }
 
 // ============ 上传流程 ============

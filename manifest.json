@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "累了？让萌宠来叫你休息。可上传自家宠物照片，让它在屏幕上陪你。",
   "author": "Kvin-pet",
-  "permissions": ["storage"],
+  "permissions": ["storage", "scripting", "activeTab"],
   "icons": {
     "16": "assets/icon-16.png",
     "48": "assets/icon-48.png",
